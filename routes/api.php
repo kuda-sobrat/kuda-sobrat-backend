@@ -1,0 +1,54 @@
+<?php
+
+use App\Http\Controllers\Api\V1\AuthController;
+use App\Http\Controllers\Api\V1\UserController;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Route;
+
+/*
+|--------------------------------------------------------------------------
+| API Routes
+|--------------------------------------------------------------------------
+|
+| Here is where you can register API routes for your application. These
+| routes are loaded by the RouteServiceProvider and all of them will
+| be assigned to the "api" middleware group. Make something great!
+|
+*/
+
+$api = app(\Dingo\Api\Routing\Router::class);
+
+$api->version('v1', ['middleware' => ['api']], function ($api) {
+    $api->post('login', [AuthController::class, 'login'])->name('login');
+    $api->post('register', [AuthController::class, 'register'])->name('register');
+
+    $api->group(['middleware' => 'auth:api'], function ($api) {
+        $api->get('test', 'App\Http\Controllers\Api\V1\TestController@index');
+        $api->get('me', [AuthController::class, 'me']);
+        $api->post('logout', [AuthController::class, 'logout']);
+    });
+
+//    Примеры маршрутизации
+//    $api->group(['prefix' => 'users'], function ($api) {
+//        $api->get('/', 'App\Http\Controllers\UserController@index')->name('users.index');
+//        $api->get('/{id}', 'App\Http\Controllers\UserController@show')->name('users.show');
+//        $api->post('/', 'App\Http\Controllers\UserController@store')->name('users.store');
+//        $api->put('/{id}', 'App\Http\Controllers\UserController@update')->name('users.update');
+//        $api->delete('/{id}', 'App\Http\Controllers\UserController@destroy')->name('users.destroy');
+//    });
+//
+//    Ресурсы
+//
+//    $api->resource('users', 'App\Http\Controllers\Api\V1\UserController', [
+//        'except' => ['destroy'], // Исключаем метод destroy
+//        'names' => [
+//            'index' => 'api.users.index',
+//            'show' => 'api.users.show',
+//            'store' => 'api.users.store',
+//            'update' => 'api.users.update',
+//        ],
+//    ]);
+//
+//    // Добавьте дополнительный маршрут, например, для поиска
+//    $api->get('users/search', 'App\Http\Controllers\Api\V1\UserController@search')->name('api.users.search');
+});
