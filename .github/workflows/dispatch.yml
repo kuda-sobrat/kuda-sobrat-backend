@@ -1,0 +1,17 @@
+name: Вызов развертывания
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  dispatch:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Вызов репозитория развертывания
+        uses: peter-evans/repository-dispatch@v2
+        with:
+          token: ${{ secrets.REPO_ACCESS_TOKEN }}
+          repository: kuda-sobrat/kuda-sobrat-docker
+          event-type: deploy
