@@ -6,7 +6,9 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
 /**
- * Сообщество, группа в соц. сети
+ * Сообщество, группа в соц. сети.
+ *
+ * @property SocialNetwork $socialNetworks социальная сеть
  */
 class Community extends Model
 {
@@ -14,9 +16,15 @@ class Community extends Model
 
     public $timestamps = false;
 
+    /**
+     * Отношение к социальной сети.
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsToMany
+     */
     public function socialNetworks()
     {
-        return $this->belongsToMany(SocialNetwork::class, 'community_social_links');
+        return $this->belongsToMany(SocialNetwork::class, 'community_social_links')
+            ->withPivot('social_network_community_id', 'path');
     }
 
     public function interests()

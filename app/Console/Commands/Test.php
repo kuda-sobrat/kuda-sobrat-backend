@@ -2,7 +2,7 @@
 
 namespace App\Console\Commands;
 
-use App\Services\VkService;
+use App\Services\CommunityVerificationService;
 use Illuminate\Console\Command;
 
 class Test extends Command
@@ -25,13 +25,14 @@ class Test extends Command
      * Execute the console command.
      */
     public function handle(
-        VkService $service
+        CommunityVerificationService $communityVerificationService,
     )
     {
-        $response = $service->getWallPosts('redsuntheatre');
+        $communityVerificationService->verifyCommunities();
+//        $response = $service->getWallPosts('redsuntheatre');
 //        dd(array_keys($response['response']['items'][0]));
 //        dd(array_keys($response['response']['items'][0]['attachments'][1]['link']));
-        dd($response['response']['items'][6]['attachments']);
+//        dd($response['response']['items'][6]['attachments']);
 //        dd($response['response']['items'][6]['text']);
     }
 }
