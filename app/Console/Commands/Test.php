@@ -2,7 +2,10 @@
 
 namespace App\Console\Commands;
 
+use App\Jobs\ProcessContextJob;
+use App\Models\ContextPost;
 use App\Services\CommunityVerificationService;
+use App\Services\ContextService;
 use Illuminate\Console\Command;
 
 class Test extends Command
@@ -26,9 +29,17 @@ class Test extends Command
      */
     public function handle(
         CommunityVerificationService $communityVerificationService,
+        ContextService $contextService,
     )
     {
-        $communityVerificationService->verifyCommunities();
+        $post = ContextPost::query()->find(7);
+
+        // 1. Преобразовать text в processed_text (вмещающий ссылки и прочие вложения)
+        // 2. Отправить запрос на проверку явялется ли пост мероприятием
+        // + (если это мероприяти(-е/-я) выделить главные поля)
+
+        ProcessContextJob::dispatch($post->id);
+//        $communityVerificationService->verifyCommunities();
 //        $response = $service->getWallPosts('redsuntheatre');
 //        dd(array_keys($response['response']['items'][0]));
 //        dd(array_keys($response['response']['items'][0]['attachments'][1]['link']));

@@ -12,6 +12,8 @@ class ContextResponse extends Model
 {
     use HasFactory;
 
+    protected $fillable = ['context_id', 'response', 'model'];
+
     public function request()
     {
         return $this->belongsTo(ContextRequest::class, 'context_request_id');
