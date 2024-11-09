@@ -8,6 +8,10 @@ use Illuminate\Database\Eloquent\Model;
 /**
  * Сообщество, группа в соц. сети.
  *
+ * @property $name
+ * @property $description
+ * @property $last_checked_at
+ * @property $is_verified
  * @property SocialNetwork $socialNetworks социальная сеть
  */
 class Community extends Model
@@ -15,6 +19,13 @@ class Community extends Model
     use HasFactory;
 
     public $timestamps = false;
+
+    protected $fillable = [
+        'name',
+        'description',
+        'last_checked_at',
+        'is_verified',
+    ];
 
     /**
      * Отношение к социальной сети.
@@ -32,8 +43,17 @@ class Community extends Model
         return $this->belongsToMany(Interest::class, 'community_interest');
     }
 
-    public function contextPosts()
+    public function socialLinks()
     {
-        return $this->hasMany(ContextPost::class);
+        return $this->hasMany(CommunitySocialLink::class, 'community_id', 'id');
+    }
+
+    /**
+     * @param SocialNetwork $socialNetwork
+     * @return null|CommunitySocialLink
+     */
+    public function socialLinkBySocialNetwork(SocialNetwork $socialNetwork)
+    {
+        return $this->socialLinks()->where('social_network_id', '=', $socialNetwork->id)->first();
     }
 }

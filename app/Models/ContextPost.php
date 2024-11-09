@@ -12,8 +12,6 @@ use Illuminate\Support\Collection;
  * @property $id
  * @property $event_id
  * @property $source_id
- * @property $source_type
- * @property $community_id
  * @property $text
  * @property $processed_text
  * @property $unique_hash
@@ -23,16 +21,16 @@ use Illuminate\Support\Collection;
  * @property $created_at
  * @property $updated_at
  * @property Collection<ContextAttachment> $attachments
+ * @property CommunitySocialLink socialLink
  */
 class ContextPost extends Model
 {
     use HasFactory;
 
     protected $fillable = [
+        'social_link_id',
         'event_id',
         'source_id',
-        'source_type',
-        'community_id',
         'text',
         'processed_text',
         'unique_hash',
@@ -65,6 +63,16 @@ class ContextPost extends Model
     public function attachments()
     {
         return $this->hasMany(ContextAttachment::class, 'context_id');
+    }
+
+    /**
+     * Связь с таблицей community_social_links.
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\HasOne
+     */
+    public function socialLink()
+    {
+        return $this->hasOne(CommunitySocialLink::class, 'id', 'social_link_id');
     }
 
     public function contextRequest()

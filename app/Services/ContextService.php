@@ -8,6 +8,9 @@ use App\Models\ContextRequest;
 use App\Services\ChatGPT\ChatGPTInteractionService;
 use Illuminate\Support\Facades\DB;
 
+/**
+ * Сервис для работы с контекстом
+ */
 class ContextService
 {
     public function __construct(
@@ -15,6 +18,14 @@ class ContextService
     ) {
     }
 
+    /**
+     *  Продолжает обработку context-объекта. Формирует и сохраняет запрос и ответ к chatGTP
+     *  TODO: Вынести в отдельный сервис? (process...)
+     * @param string $prompt
+     * @param int $contextId
+     * @param string $type
+     * @return void
+     */
     public function processContext(string $prompt, int $contextId, string $type = 'none')
     {
         $contextRequest = new ContextRequest();
@@ -32,6 +43,9 @@ class ContextService
     }
 
     /**
+     * Формирует контекст для запроса
+     * TODO: Пересмотреть на использование шаблона blade
+     *
      * @param ContextPost $post
      * @return string
      */

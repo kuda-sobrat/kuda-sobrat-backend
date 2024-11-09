@@ -4,8 +4,12 @@ namespace App\Console\Commands;
 
 use App\Jobs\ProcessContextJob;
 use App\Models\ContextPost;
+use App\Models\ContextResponse;
+use App\Models\Event;
 use App\Services\CommunityVerificationService;
 use App\Services\ContextService;
+use App\Services\EventService;
+use Carbon\Carbon;
 use Illuminate\Console\Command;
 
 class Test extends Command
@@ -30,15 +34,29 @@ class Test extends Command
     public function handle(
         CommunityVerificationService $communityVerificationService,
         ContextService $contextService,
+        EventService $eventService,
     )
     {
-        $post = ContextPost::query()->find(7);
+        /** @var ContextResponse $contextResponse */
+        $contextResponse = ContextResponse::query()->first();
 
-        // 1. Преобразовать text в processed_text (вмещающий ссылки и прочие вложения)
-        // 2. Отправить запрос на проверку явялется ли пост мероприятием
-        // + (если это мероприяти(-е/-я) выделить главные поля)
+        $eventService->processContext($contextResponse);
 
-        ProcessContextJob::dispatch($post->id);
+//        $event = new Event();
+//        $event->name = 'Test';
+//        $event->description = 'TestDescription';
+//        $event->community_id = 1;
+//        $event->start_datetime = Carbon::make('2024-11-09 10:00:00');
+//        $event->location = 'Минская 51, кв. 4';
+//
+//        $event->findOrSave();
+//        $event->save();
+//        dd($event);
+
+//        /** @var ContextPost $post */
+//        $post = ContextPost::query()->find(187);
+
+//        ProcessContextJob::dispatch($post->id);
 //        $communityVerificationService->verifyCommunities();
 //        $response = $service->getWallPosts('redsuntheatre');
 //        dd(array_keys($response['response']['items'][0]));

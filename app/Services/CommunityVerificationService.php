@@ -7,7 +7,11 @@ use App\Models\ContextPost;
 use App\Repositories\CommunityRepository;
 use App\Services\SocialMedia\SocialMediaApiFactory;
 use App\Services\SocialMedia\VkApiService;
+use GuzzleHttp\Exception\GuzzleException;
 
+/**
+ * Сервис верификации сообществ.
+ */
 class CommunityVerificationService
 {
     public function __construct(
@@ -16,6 +20,13 @@ class CommunityVerificationService
     ) {
     }
 
+    /**
+     * Верифицирует сообщество.
+     *
+     * @param Community $community
+     * @return void
+     * @throws GuzzleException
+     */
     public function verifyCommunity(Community $community)
     {
         try {
@@ -25,13 +36,11 @@ class CommunityVerificationService
 
                 /** @var ContextPost $post */
                 foreach ($posts as $post) {
-                    $post->source_type = $socialNetwork->name;
                     /** @var ContextPost $contextPost */
                     $contextPost = ContextPost::query()->updateOrCreate(
                         [
                             'source_id' => $post->source_id,
-                            'source_type' => $post->source_type,
-                            'community_id' => $post->community_id,
+                            'social_link_id' => $community->socialLinkBySocialNetwork($socialNetwork)->id
                         ],
                         $post->getAttributes()
                     );
@@ -47,6 +56,12 @@ class CommunityVerificationService
         }
     }
 
+    /**
+     * Верифицирует сообщества.
+     *
+     * @return void
+     * @throws GuzzleException
+     */
     public function verifyCommunities()
     {
         $communities = $this->communityRepository->getCommunitiesToVerify();
