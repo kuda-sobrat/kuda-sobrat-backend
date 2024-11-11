@@ -2,6 +2,7 @@
 
 namespace App\Services\SocialMedia;
 
+use App\Contracts\Interfaces\SocialMediaServiceInterface;
 use App\Models\ContextPost;
 use GuzzleHttp\Client;
 use GuzzleHttp\Exception\RequestException;

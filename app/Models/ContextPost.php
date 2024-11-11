@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Enums\ProcessStatusEnum;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Collection;
@@ -30,6 +31,7 @@ class ContextPost extends Model
     protected $fillable = [
         'social_link_id',
         'event_id',
+        'status',
         'source_id',
         'text',
         'processed_text',
@@ -42,6 +44,7 @@ class ContextPost extends Model
     ];
 
     protected $casts = [
+        'status' => ProcessStatusEnum::class,
         'tags' => 'array',
     ];
 

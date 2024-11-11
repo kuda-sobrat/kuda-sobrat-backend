@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Services\SocialMedia;
+namespace App\Contracts\Interfaces;
 
 use App\Models\ContextPost;
 use Illuminate\Support\Collection;

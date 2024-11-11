@@ -27,39 +27,6 @@ class EventService
      */
     public function processContext(ContextResponse $context)
     {
-        try {
-            $response = json_decode($context->response);
-        } catch (\Exception $e) {
-            // TODO: Обработка ошибок
-            throw $e;
-        }
 
-        if (!$response->is_event) {
-            return;
-        }
-
-        foreach ($response->events as $eventData) {
-            DB::transaction(function () use ($eventData, &$context) {
-                /** @var Event $event */
-                $event = Event::query()->make([
-                    'community_id' => $context->contextPost->socialLink->community_id,
-                    'name' => $eventData->name,
-                    'description' => $eventData->description,
-                    'start_datetime' => new \DateTime($eventData->start_datetime),
-                    'end_datetime' => new \DateTime($eventData->end_datetime),
-                    'location' => $eventData->location,
-                ]);
-
-                $event->setupUniqueHash();
-
-                $event->findOrSave();
-
-                $context->contextPost->event_id = $event->id;
-                $context->contextPost->save();
-
-                GenerateEventInterestsJob::dispatch($event->id);
-            });
-
-        }
     }
 }

@@ -22,7 +22,7 @@ class ContextRequest extends Model
 
     protected $fillable = ['type', 'context', 'context_id', 'status'];
 
-    public function responses()
+    public function ContextResponses()
     {
         return $this->hasMany(ContextResponse::class, 'context_request_id');
     }

@@ -1,17 +1,19 @@
 <?php
 
-namespace App\Services;
+namespace App\Services\Context;
 
-use App\Jobs\GPTSendMessageJob;
+use App\Contracts\Interfaces\ContextServiceInterface;
 use App\Models\ContextPost;
 use App\Models\ContextRequest;
+use App\Models\ContextResponse;
 use App\Services\ChatGPT\ChatGPTInteractionService;
-use Illuminate\Support\Facades\DB;
+use Exception;
+use Illuminate\Support\Facades\App;
 
 /**
  * Сервис для работы с контекстом
  */
-class ContextService
+class ContextService implements ContextServiceInterface
 {
     public function __construct(
         protected ChatGPTInteractionService $chatGPTService,
@@ -19,27 +21,28 @@ class ContextService
     }
 
     /**
-     *  Продолжает обработку context-объекта. Формирует и сохраняет запрос и ответ к chatGTP
-     *  TODO: Вынести в отдельный сервис? (process...)
-     * @param string $prompt
+     * Продолжает обработку context-объекта
+     * TODO: Вынести в отдельный сервис? (process...)
+     *
      * @param int $contextId
-     * @param string $type
+     * @param string|null $contextClass
      * @return void
+     * @throws Exception
      */
-    public function processContext(string $prompt, int $contextId, string $type = 'none')
+    public function processContext(int $contextId, string|null $contextClass = ContextPost::class): void
     {
-        $contextRequest = new ContextRequest();
-        DB::transaction(function () use ($prompt, $type, &$contextRequest, $contextId) {
-            /** @var ContextRequest $contextRequest */
-            $contextRequest = ContextRequest::query()->create([
-                'type' => $type,
-                'context' => $prompt,
-                'context_id' => $contextId,
-                'status' => 'pending',
-            ]);
-        });
+        $serviceMap = [
+            ContextPost::class => ContextPostService::class,
+            ContextRequest::class => ContextRequestService::class,
+            ContextResponse::class => ContextResponseService::class,
+        ];
 
-        GPTSendMessageJob::dispatch($prompt, $contextRequest->id);
+        if (!isset($serviceMap[$contextClass])) {
+            throw new \Exception('Класс контекста не найден. Класс: ' . $contextClass);
+        }
+
+        $instance = App::make($serviceMap[$contextClass]);
+        $instance->processContext($contextId, $contextClass);
     }
 
     /**
