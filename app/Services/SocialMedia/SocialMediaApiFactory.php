@@ -2,9 +2,16 @@
 
 namespace App\Services\SocialMedia;
 
+use App\Contracts\Interfaces\SocialMediaServiceInterface;
+
 class SocialMediaApiFactory
 {
-    public static function getService($sourceType)
+    /**
+     * @param $sourceType
+     * @return VkApiService
+     * @throws \Exception
+     */
+    public static function getService($sourceType): SocialMediaServiceInterface
     {
         return match ($sourceType) {
             'vk' => new VkApiService(),

@@ -13,6 +13,11 @@ class ContextResponseService implements ContextServiceInterface
 {
 
     /**
+     * Продолжает обработку context-объекта
+     *
+     * @param int $contextId
+     * @param string|null $contextClass
+     * @return void
      * @throws \Exception
      */
     public function processContext(int $contextId, ?string $contextClass = null): void

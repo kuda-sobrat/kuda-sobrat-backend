@@ -11,6 +11,7 @@ use Illuminate\Support\Collection;
  * Пост сформированный chatGPT
  *
  * @property $id
+ * @property $social_link_id
  * @property $event_id
  * @property $source_id
  * @property $text
@@ -53,6 +54,11 @@ class ContextPost extends Model
         return $this->belongsTo(Event::class);
     }
 
+    /**
+     * TODO: Определить связь
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
+     */
     public function community()
     {
         return $this->belongsTo(Community::class);
@@ -63,6 +69,11 @@ class ContextPost extends Model
         return $this->belongsToMany(Interest::class, 'post_interest');
     }
 
+    /**
+     * Приложения к записи
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\HasMany
+     */
     public function attachments()
     {
         return $this->hasMany(ContextAttachment::class, 'context_id');

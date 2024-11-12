@@ -2,12 +2,15 @@
 
 namespace App\Services;
 
+use App\Enums\ProcessStatusEnum;
+use App\Events\CommunitiesVerifiedEvent;
+use App\Jobs\VerifyCommunityJob;
 use App\Models\Community;
-use App\Models\ContextPost;
 use App\Repositories\CommunityRepository;
-use App\Services\SocialMedia\SocialMediaApiFactory;
-use App\Services\SocialMedia\VkApiService;
-use GuzzleHttp\Exception\GuzzleException;
+use Illuminate\Bus\Batch;
+use Illuminate\Support\Facades\Bus;
+use Illuminate\Support\Facades\Log;
+use Throwable;
 
 /**
  * Сервис верификации сообществ.
@@ -16,7 +19,6 @@ class CommunityVerificationService
 {
     public function __construct(
         protected CommunityRepository $communityRepository,
-        protected VkApiService $vkApiService,
     ) {
     }
 
@@ -24,35 +26,28 @@ class CommunityVerificationService
      * Верифицирует сообщество.
      *
      * @param Community $community
-     * @return void
-     * @throws GuzzleException
+     * @return bool
      */
-    public function verifyCommunity(Community $community)
+    public function verifyCommunity(Community $community): bool
     {
-        try {
-            foreach ($community->socialNetworks as $socialNetwork) {
-                $posts = SocialMediaApiFactory::getService($socialNetwork->name)
-                    ->getLatestPosts($socialNetwork->pivot->social_network_community_id);
+        $hasEventPosts = $community->contextPosts()
+            ->whereNotNull('event_id')
+            ->exists();
 
-                /** @var ContextPost $post */
-                foreach ($posts as $post) {
-                    /** @var ContextPost $contextPost */
-                    $contextPost = ContextPost::query()->updateOrCreate(
-                        [
-                            'source_id' => $post->source_id,
-                            'social_link_id' => $community->socialLinkBySocialNetwork($socialNetwork)->id
-                        ],
-                        $post->getAttributes()
-                    );
-                    $contextPost->attachments()->delete();
-                    foreach ($post->attachments as $attachment) {
-                        $attachment->context_id = $contextPost->id;
-                        $attachment->save();
-                    }
-                }
-            }
-        } catch (\Exception $e) {
-            dump($e->getMessage());
+        if ($hasEventPosts) {
+            $community->verification_status = ProcessStatusEnum::Completed;
+            $community->is_verified = true;
+            $community->save();
+
+            Log::info("Сообщество {$community->id} успешно верифицировано (найдены мероприятия).");
+            return true;
+        } else {
+            $community->verification_status = ProcessStatusEnum::Failed;
+            $community->is_verified = false;
+            $community->save();
+
+            Log::info("В сообществе {$community->id} не обнаружены посты с мероприятиями.");
+            return false;
         }
     }
 
@@ -60,14 +55,31 @@ class CommunityVerificationService
      * Верифицирует сообщества.
      *
      * @return void
-     * @throws GuzzleException
+     * @throws Throwable
      */
     public function verifyCommunities()
     {
         $communities = $this->communityRepository->getCommunitiesToVerify();
 
+        $jobs = [];
+
         foreach ($communities as $community) {
-            $this->verifyCommunity($community);
+            $jobs[] = new VerifyCommunityJob($community->id);
         }
+
+        Bus::batch($jobs)
+            ->name('Пакет верификации сообществ')
+            ->then(function () {
+                event(new CommunitiesVerifiedEvent());
+            })
+            ->catch(function (Batch $batch, Throwable $e) {
+                // TODO: Логирование
+                dump($e->getMessage());
+//                \Log::error('Ошибка в пакете задач: ' . $e->getMessage());
+            })
+            ->finally(function () {
+                // Этот метод вызывается после завершения всех задач, независимо от их статусов
+            })
+            ->dispatch();
     }
 }

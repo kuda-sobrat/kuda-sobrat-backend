@@ -1,0 +1,52 @@
+<?php
+
+namespace App\Jobs;
+
+use App\Repositories\CommunityRepository;
+use App\Repositories\ContextPostsRepository;
+use App\Services\CommunityService;
+use Illuminate\Bus\Batchable;
+use Illuminate\Bus\Queueable;
+use Illuminate\Contracts\Queue\ShouldQueue;
+use Illuminate\Foundation\Bus\Dispatchable;
+use Illuminate\Queue\InteractsWithQueue;
+use Illuminate\Queue\SerializesModels;
+
+/**
+ * Получает список последних постов для сообщества, ориентируясь по последнему записанному посту
+ * Если посты не определены забирает последние 8 постов
+ */
+class FetchCommunityPostsFromApiJob implements ShouldQueue
+{
+    use Batchable, Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
+
+    /**
+     * Create a new job instance.
+     */
+    public function __construct(
+        protected $communityId,
+    ) {
+        //
+    }
+
+    /**
+     * Execute the job.
+     */
+    public function handle(
+        CommunityRepository $communityRepository,
+        CommunityService $communityService,
+        ContextPostsRepository $contextPostsRepository,
+    ): void
+    {
+        try {
+            $community = $communityRepository->get($this->communityId);
+            $latestSavedPost = $communityRepository->getLatestPost($community);
+
+            $contextPosts = $communityService->getLatestPosts($community, limit: 8, since: ($latestSavedPost ? $latestSavedPost->created_at : null));
+            $contextPosts[0]->save();
+            $contextPostsRepository->savePosts($contextPosts);
+        } catch (\Exception) {
+
+        }
+    }
+}

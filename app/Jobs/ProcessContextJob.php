@@ -3,6 +3,7 @@
 namespace App\Jobs;
 
 use App\Services\Context\ContextService;
+use Illuminate\Bus\Batchable;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
@@ -10,7 +11,7 @@ use Illuminate\Queue\SerializesModels;
 
 class ProcessContextJob implements ShouldQueue
 {
-    use Dispatchable, Queueable, SerializesModels;
+    use Batchable, Dispatchable, Queueable, SerializesModels;
 
     /**
      * Создание нового экземпляра задания.

@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Enums\ProcessStatusEnum;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
@@ -9,6 +10,7 @@ use Illuminate\Database\Eloquent\Model;
  * Сообщество, группа в соц. сети.
  *
  * @property $name
+ * @property $verification_status
  * @property $description
  * @property $last_checked_at
  * @property $is_verified
@@ -22,9 +24,14 @@ class Community extends Model
 
     protected $fillable = [
         'name',
+        'verification_status',
         'description',
         'last_checked_at',
         'is_verified',
+    ];
+
+    protected $casts = [
+        'verification_status' => ProcessStatusEnum::class
     ];
 
     /**
@@ -55,5 +62,13 @@ class Community extends Model
     public function socialLinkBySocialNetwork(SocialNetwork $socialNetwork)
     {
         return $this->socialLinks()->where('social_network_id', '=', $socialNetwork->id)->first();
+    }
+
+    /**
+     * @return \Illuminate\Database\Eloquent\Relations\HasManyThrough
+     */
+    public function contextPosts()
+    {
+        return $this->hasManyThrough(ContextPost::class, CommunitySocialLink::class, 'community_id', 'social_link_id', 'id', 'id');
     }
 }

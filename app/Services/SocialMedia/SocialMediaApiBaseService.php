@@ -63,10 +63,13 @@ class SocialMediaApiBaseService implements SocialMediaServiceInterface
      * @param $communityId
      * @param $limit
      * @param int $offset
+     * @param ?\DateTime $since
+     * @param ?string $sinceId
+     * @param ?array $contextPostData.
      * @return Collection<ContextPost>
      * @throws \Exception
      */
-    public function getLatestPosts($communityId, $limit = 10, int $offset = 0): Collection
+    public function getLatestPosts($communityId, $limit = 10, int $offset = 0, \DateTime $since = null, ?string $sinceId = null, ?array $contextPostData = null): Collection
     {
         throw new \Exception('Метод getLatestPosts не определен.');
     }

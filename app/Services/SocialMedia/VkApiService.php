@@ -5,6 +5,7 @@ namespace App\Services\SocialMedia;
 use App\Models\ContextAttachment;
 use App\Models\ContextPost;
 use Carbon\Carbon;
+use DateTime;
 use Exception;
 use GuzzleHttp\Exception\GuzzleException;
 use Illuminate\Support\Collection;
@@ -41,34 +42,46 @@ class VkApiService extends SocialMediaApiBaseService
     }
 
     /**
+     * Получает список записей сообщества, ориентируясь на переданные параметры
+     *
      * @param $communityId
-     * @param $limit
+     * @param int $limit
      * @param int $offset
+     * @param DateTime|null $since
+     * @param string|null $sinceId
+     * @param ?array $contextPostData.
      * @return Collection<ContextPost>
      * @throws GuzzleException
      */
-    public function getLatestPosts($communityId, $limit = 10, int $offset = 0): Collection
+    public function getLatestPosts($communityId, $limit = 10, int $offset = 0, DateTime $since = null, ?string $sinceId = null, ?array $contextPostData = null): Collection
     {
+        $maxLimit = 100;
         $params = [
             'owner_id' => -1 * $communityId, // Отрицательное значение для групп
-            'count' => $limit,
+            'count' => min($limit, $maxLimit),
             'offset' => $offset,
         ];
 
         $response = $this->call('wall.get', $params);
 
         if (isset($response['error'])) {
-            throw new \Exception('VK API error: ' . $response['error']['error_msg']);
+            throw new \Exception('Ошибка VK API: ' . $response['error']['error_msg']);
         }
 
         // Обработка полученных данных и приведение к общему виду
-        $posts = new Collection();
+        $contextPosts = new Collection();
+
         foreach ($response['response']['items'] as $item) {
+            $isPinned = $item['is_pinned'] ?? false;
+            if (!$isPinned && $since && Carbon::parse($item['date']) < $since) {
+                continue;
+            }
+
             $contextPost = new ContextPost([
                 'source_id' => $item['id'],
-                'community_id' => $communityId,
+                'social_link_id' => $contextPostData['social_link_id'],
                 'text' => $item['text'],
-                'unique_hash' => md5($item['text'] ?? ''), // TODO: Определить хэш согласно алгоритму. Определить генерацию автоматически при изменении данных
+                'unique_hash' => $item['hash'],
                 'created_at' => date('Y-m-d H:i:s', $item['date']),
                 'updated_at' => date('Y-m-d H:i:s'),
             ]);
@@ -77,22 +90,22 @@ class VkApiService extends SocialMediaApiBaseService
                 $contextPost->setRelation('attachments', collect($this->processAttachments($item['attachments'], $contextPost)));
             }
 
-            $posts->push($contextPost);
+            $contextPosts->push($contextPost);
         }
 
-        return $posts;
+        return $contextPosts;
     }
 
     /**
      * Получить посты из сообщества за определенный период.
      *
      * @param int|string $communityId Идентификатор сообщества.
-     * @param \DateTime $startDate Начальная дата периода.
-     * @param \DateTime|null $endDate Конечная дата периода (если null, используется текущее время).
+     * @param DateTime $startDate Начальная дата периода.
+     * @param DateTime|null $endDate Конечная дата периода (если null, используется текущее время).
      * @return Collection<ContextPost>
      * @throws GuzzleException
      */
-    public function getPostsByDate(int|string $communityId, \DateTime $startDate, ?\DateTime $endDate = null): Collection
+    public function getPostsByDate(int|string $communityId, DateTime $startDate, ?DateTime $endDate = null): Collection
     {
         $startTimestamp = $startDate->getTimestamp();
 

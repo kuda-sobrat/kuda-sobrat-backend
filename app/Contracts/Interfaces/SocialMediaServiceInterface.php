@@ -13,9 +13,12 @@ interface SocialMediaServiceInterface
      * @param int|string $communityId Идентификатор сообщества.
      * @param int $limit Количество записей для получения.
      * @param int $offset Смещение для выборки записей.
+     * @param ?\DateTime $since Смещение для выборки записей.
+     * @param ?string $sinceId Смещение для выборки записей.
+     * @param ?array $contextPostData.
      * @return Collection<ContextPost> Массив постов.
      */
-    public function getLatestPosts(int|string $communityId, int $limit = 10, int $offset = 0): Collection;
+    public function getLatestPosts(int|string $communityId, int $limit = 10, int $offset = 0, ?\DateTime $since = null, ?string $sinceId = null, ?array $contextPostData = null): Collection;
 
     /**
      * Получить посты из сообщества за определенный период.

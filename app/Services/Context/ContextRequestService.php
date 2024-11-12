@@ -19,6 +19,8 @@ class ContextRequestService implements ContextServiceInterface
     }
 
     /**
+     * Продолжает обработку context-объекта
+     *
      * @param int $contextId
      * @param string|null $contextClass
      * @return void
