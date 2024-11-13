@@ -70,13 +70,12 @@ class ContextService implements ContextServiceInterface
             }
         });
 
-        $attachmentsText = "\n\n### Приложения:\n";
+        $attachmentsText = "\nПриложения:\n";
         foreach ($attachmentsTmp as $type => $attachments) {
             $attachmentsText = "$attachmentsText## $type\n" . implode(";\n", $attachments);
         }
 
-        $context = "### Пост из социальной сети:\n\n";
-        $context .= $post->text . "\n\n";
+        $context = $post->text . "\n\n";
         $context .= "Текстовая информация приложений:\n\n";
         $context .= $attachmentsText;
 

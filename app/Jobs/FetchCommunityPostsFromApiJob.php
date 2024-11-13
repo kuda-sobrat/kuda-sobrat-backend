@@ -45,8 +45,8 @@ class FetchCommunityPostsFromApiJob implements ShouldQueue
             $contextPosts = $communityService->getLatestPosts($community, limit: 8, since: ($latestSavedPost ? $latestSavedPost->created_at : null));
             $contextPosts[0]->save();
             $contextPostsRepository->savePosts($contextPosts);
-        } catch (\Exception) {
-
+        } catch (\Exception $e) {
+            dump($e->getMessage());
         }
     }
 }
