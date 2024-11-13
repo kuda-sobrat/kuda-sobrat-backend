@@ -14,14 +14,18 @@ class Interest extends Model
 
     public $timestamps = false;
 
-    public function parentInterests()
-    {
-        return $this->belongsToMany(Interest::class, 'interest_relations', 'interest_id', 'parent_interest_id');
-    }
+    protected $fillable = ['name', 'description', 'is_paid'];
 
-    public function childInterests()
+    // Отношение дочерних интересов
+    public function children()
     {
         return $this->belongsToMany(Interest::class, 'interest_relations', 'parent_interest_id', 'interest_id');
+    }
+
+    // Отношение родительского интереса
+    public function parent()
+    {
+        return $this->belongsToMany(Interest::class, 'interest_relations', 'interest_id', 'parent_interest_id');
     }
 
     public function events()

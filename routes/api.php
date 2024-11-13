@@ -26,6 +26,7 @@ $api->version('v1', ['middleware' => ['api']], function ($api) {
         $api->get('test', 'App\Http\Controllers\Api\V1\TestController@index');
         $api->get('me', [AuthController::class, 'me']);
         $api->post('logout', [AuthController::class, 'logout']);
+        $api->get('interests', [\App\Http\Controllers\Api\V1\InterestController::class, 'index']);
     });
 
 //    Примеры маршрутизации

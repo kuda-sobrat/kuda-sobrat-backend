@@ -16,8 +16,10 @@ class DatabaseSeeder extends Seeder
     public function run(): void
     {
         $seeders = [
-            \Database\Seeders\SocialNetworksTableSeeder::class,
-            \Database\Seeders\CommunitiesTableSeeder::class,
+            SocialNetworksTableSeeder::class,
+            CommunitiesTableSeeder::class,
+//            InterestsTableSeeder::class,
+            InterestsCsvSeeder::class,
         ];
 
         foreach ($seeders as $seeder) {
