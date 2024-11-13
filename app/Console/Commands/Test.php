@@ -2,6 +2,7 @@
 
 namespace App\Console\Commands;
 
+use App\Jobs\FetchEventInterestsFromGPTJob;
 use App\Jobs\TestJob;
 use App\Models\ContextResponse;
 use App\Services\CommunityVerificationService;
@@ -34,7 +35,6 @@ class Test extends Command
         EventService $eventService,
     )
     {
-        $contextResponse = ContextResponse::query()->first();
-        dd($contextResponse->jsonResponse);
+        FetchEventInterestsFromGPTJob::dispatch(658);
     }
 }

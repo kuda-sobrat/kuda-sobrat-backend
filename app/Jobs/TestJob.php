@@ -30,7 +30,7 @@ class TestJob implements ShouldQueue
      */
     public function handle(): void
     {
-        Bus::batch([new GenerateEventInterestsJob(1)])
+        Bus::batch([new FetchEventInterestsFromGPTJob(1)])
             ->then(function (Batch $batch) {
                 Log::info('Then callback called.');
             })

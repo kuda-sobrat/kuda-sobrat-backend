@@ -2,7 +2,7 @@
 
 namespace App\Services;
 
-use App\Jobs\GenerateEventInterestsJob;
+use App\Jobs\FetchEventInterestsFromGPTJob;
 use App\Models\ContextResponse;
 use App\Models\Event;
 use App\Services\ChatGPT\ChatGPTInteractionService;

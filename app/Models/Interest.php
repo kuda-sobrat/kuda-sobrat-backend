@@ -28,6 +28,19 @@ class Interest extends Model
         return $this->belongsToMany(Interest::class, 'interest_relations', 'interest_id', 'parent_interest_id');
     }
 
+    public function getLevelAttribute()
+    {
+        $level = 0;
+        $current = $this;
+
+        while ($current->parent) {
+            $level++;
+            $current = $current->parent;
+        }
+
+        return $level;
+    }
+
     public function events()
     {
         return $this->belongsToMany(Event::class, 'event_interest');

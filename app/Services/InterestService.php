@@ -16,4 +16,9 @@ class InterestService
         // Здесь можно добавить бизнес-логику по обработке данных
         return $this->interestRepository->getTree();
     }
+
+    public function getBaseInterests()
+    {
+        return $this->interestRepository->getBaseInterests();
+    }
 }

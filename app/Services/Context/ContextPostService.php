@@ -44,6 +44,20 @@ class ContextPostService implements ContextServiceInterface
             'inputText' => $context,
         ])->render();
 
+        $this->sendPrompt($contextPost, $prompt, $type);
+    }
+
+    /**
+     * Отправляет prompt к GPT. Результат связывает с ContextPost
+     *
+     * @param ContextPost $contextPost
+     * @param string $prompt
+     * @param string $type
+     * @param bool $sync
+     * @return void
+     */
+    public function sendPrompt(ContextPost $contextPost, string $prompt, string $type, bool $sync = false): void
+    {
         $contextRequest = new ContextRequest();
         DB::transaction(function () use ($prompt, $type, &$contextRequest, $contextPost) {
             /** @var ContextRequest $contextRequest */
@@ -55,6 +69,27 @@ class ContextPostService implements ContextServiceInterface
             ]);
         });
 
-        ProcessContextJob::dispatch($contextRequest->id, ContextRequest::class);
+        if ($sync) {
+            ProcessContextJob::dispatchSync($contextRequest->id, ContextRequest::class);
+        } else {
+            ProcessContextJob::dispatch($contextRequest->id, ContextRequest::class);
+        }
+    }
+
+    /**
+     * Получает последний запрос. По типу, если указан тип
+     *
+     * @param ContextPost $contextPost
+     * @param $type
+     * @return ContextRequest
+     */
+    public function getLastRequest(ContextPost $contextPost, $type = null): ContextRequest
+    {
+        /** @var ContextRequest|null $result */
+        $result = !$type ?
+            ContextRequest::query()->where('context_id', $contextPost->id)->orderByDesc('created_at')->first()
+            : ContextRequest::query()->where('type', '=', $type)->where('context_id', $contextPost->id)->orderByDesc('created_at')->first();
+
+        return $result;
     }
 }

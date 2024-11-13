@@ -15,6 +15,7 @@ use Illuminate\Database\Eloquent\Model;
  * @property $created_at
  * @property $updated_at
  * @property ContextPost $contextPost
+ * @property ContextResponse $contextResponse
  */
 class ContextRequest extends Model
 {
@@ -30,5 +31,10 @@ class ContextRequest extends Model
     public function contextPost()
     {
         return $this->belongsTo(ContextPost::class, 'context_id');
+    }
+
+    public function contextResponse()
+    {
+        return $this->hasOne(ContextResponse::class, 'context_id');
     }
 }

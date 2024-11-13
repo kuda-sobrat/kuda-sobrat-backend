@@ -21,4 +21,11 @@ class InterestController extends BaseController
 
         return $this->response->collection($interestsTree, BaseTransformer::class);
     }
+
+    public function getBaseInterests()
+    {
+        $baseInterests = $this->interestService->getBaseInterests();
+
+        return $this->response->collection($baseInterests, BaseTransformer::class);
+    }
 }

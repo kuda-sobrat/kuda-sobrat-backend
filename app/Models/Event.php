@@ -2,20 +2,26 @@
 
 namespace App\Models;
 
+use App\Enums\ProcessStatusEnum;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Collection;
 
 /**
  * Мероприятие
  *
  * @property $id
  * @property $community_id
+ * @property $status
  * @property $name
  * @property $description
  * @property $start_datetime
  * @property $end_datetime
  * @property $location
  * @property $unique_hash
+ * @property $created_at
+ * @property $updated_at
+ * @property Collection<Interest> $interests
  */
 class Event extends Model
 {
@@ -23,12 +29,19 @@ class Event extends Model
 
     protected $fillable = [
         'community_id',
+        'status',
         'name',
         'description',
         'start_datetime',
         'end_datetime',
         'location',
         'unique_hash',
+    ];
+
+    protected $casts = [
+        'start_datetime' => 'datetime',
+        'end_datetime' => 'datetime',
+        'status' => ProcessStatusEnum::class,
     ];
 
     public static function booted()

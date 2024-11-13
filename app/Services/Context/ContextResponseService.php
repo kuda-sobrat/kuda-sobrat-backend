@@ -4,7 +4,7 @@ namespace App\Services\Context;
 
 use App\Contracts\Interfaces\ContextServiceInterface;
 use App\Enums\ProcessStatusEnum;
-use App\Jobs\GenerateEventInterestsJob;
+use App\Jobs\FetchEventInterestsFromGPTJob;
 use App\Models\ContextResponse;
 use App\Models\Event;
 use Illuminate\Support\Facades\DB;
@@ -26,14 +26,20 @@ class ContextResponseService implements ContextServiceInterface
         /** @var ContextResponse $contextResponse */
         $contextResponse = ContextResponse::query()->findOrFail($contextId);
 
+        if ($contextResponse->contextRequest->type !== 'setup_event') {
+            Log::info("Обработка ContextResponseService: вызван {$contextResponse->contextRequest->type}");
+            return;
+        }
+
         $contextResponse->update(['status' => ProcessStatusEnum::Pending->value]);
 
         $response = $contextResponse->jsonResponse;
 
         if (empty($response)) {
             $contextResponse->update(['status' => ProcessStatusEnum::Failed->value]);
+            dump($contextResponse);
             // TODO: Логирование
-            Log::info("Тело отвате пусто ContextPost ID: ${$contextId}");
+            Log::info("Тело ответа пусто ContextPost ID: $contextId");
             return;
         } else if (!$response->is_event) {
             $contextResponse->update(['status' => ProcessStatusEnum::Completed->value]);
@@ -68,7 +74,7 @@ class ContextResponseService implements ContextServiceInterface
                 });
 
                 // TODO: Вынести в обработчик события завершения формирования event
-                GenerateEventInterestsJob::dispatch($event->id);
+                FetchEventInterestsFromGPTJob::dispatch($contextResponse->id);
             } catch (\Exception $exception) {
                 $contextResponse->update(['status' => ProcessStatusEnum::Failed->value]);
                 $contextResponse->contextPost->update(['status' => ProcessStatusEnum::Failed->value]);

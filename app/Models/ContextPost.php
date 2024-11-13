@@ -21,6 +21,7 @@ use Illuminate\Support\Collection;
  * @property $tags
  * @property $created_at
  * @property $updated_at
+ * @property Event|null $event
  * @property Collection<ContextAttachment> $attachments
  * @property CommunitySocialLink socialLink
  */

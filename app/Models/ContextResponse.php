@@ -40,17 +40,17 @@ class ContextResponse extends Model
     /**
      * Сериализация ответа в json
      *
-     * @return Object|null
+     * @return Object|array|null
      */
-    public function getJsonResponseAttribute(): Object|null
+    public function getJsonResponseAttribute(): Object|array|null
     {
 
-        $json = json_decode($this->attributes['response']);
+        $json = json_decode($this->response);
         if ($this->response != null && empty($tmp)) {
             $pattern = '/```json\s*(\{.*?\})\s*```/s';
-            if (preg_match($pattern, $this->response, $matches)) {
+            $patternB = '/```json\s*(\[.*?\])\s*```/s';
+            if (preg_match($pattern, $this->response, $matches) || preg_match($patternB, $this->response, $matches)) {
                 $json = json_decode($matches[1]);
-                // Теперь $jsonString содержит ваш JSON
             }
         }
         return $json;
