@@ -32,6 +32,7 @@ class CommunityVerificationService
     {
         $hasEventPosts = $community->contextPosts()
             ->whereNotNull('event_id')
+            ->where('status', '=', ProcessStatusEnum::Completed)
             ->exists();
 
         if ($hasEventPosts) {

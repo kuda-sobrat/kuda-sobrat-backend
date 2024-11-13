@@ -34,6 +34,7 @@ class Test extends Command
         EventService $eventService,
     )
     {
-        TestJob::dispatch();
+        $contextResponse = ContextResponse::query()->first();
+        dd($contextResponse->jsonResponse);
     }
 }

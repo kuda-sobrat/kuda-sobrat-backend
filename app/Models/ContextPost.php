@@ -13,12 +13,11 @@ use Illuminate\Support\Collection;
  * @property $id
  * @property $social_link_id
  * @property $event_id
+ * @property $status
  * @property $source_id
  * @property $text
  * @property $processed_text
  * @property $unique_hash
- * @property $context_request_id
- * @property $context_response_id
  * @property $tags
  * @property $created_at
  * @property $updated_at
@@ -37,8 +36,6 @@ class ContextPost extends Model
         'text',
         'processed_text',
         'unique_hash',
-        'context_request_id',
-        'context_response_id',
         'tags',
         'created_at',
         'updated_at',

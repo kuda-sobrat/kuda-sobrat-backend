@@ -8,6 +8,7 @@ use App\Jobs\GenerateEventInterestsJob;
 use App\Models\ContextResponse;
 use App\Models\Event;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 class ContextResponseService implements ContextServiceInterface
 {
@@ -27,18 +28,12 @@ class ContextResponseService implements ContextServiceInterface
 
         $contextResponse->update(['status' => ProcessStatusEnum::Pending->value]);
 
-        try {
-            $response = json_decode($contextResponse->response);
-        } catch (\Exception $e) {
-            $contextResponse->update(['status' => ProcessStatusEnum::Failed->value]);
-            // TODO: Обработка ошибок, логирование
-            throw $e;
-        }
+        $response = $contextResponse->jsonResponse;
 
         if (empty($response)) {
             $contextResponse->update(['status' => ProcessStatusEnum::Failed->value]);
             // TODO: Логирование
-//            throw new \Exception('Тело ответа пусто');
+            Log::info("Тело отвате пусто ContextPost ID: ${$contextId}");
             return;
         } else if (!$response->is_event) {
             $contextResponse->update(['status' => ProcessStatusEnum::Completed->value]);
@@ -46,32 +41,39 @@ class ContextResponseService implements ContextServiceInterface
         }
 
         foreach ($response->events as $eventData) {
-            if (empty($eventData->location)) {
-                // TODO: Логирование
-                continue;
+            try {
+                if (empty($eventData->location)) {
+                    // TODO: Логирование
+                    continue;
+                }
+
+                /** @var Event $event */
+                $event = Event::query()->make([
+                    'community_id' => $contextResponse->contextPost->socialLink->community_id,
+                    'name' => $eventData->name,
+                    'description' => $eventData->description,
+                    'start_datetime' => new \DateTime($eventData->start_datetime),
+                    'end_datetime' => new \DateTime($eventData->end_datetime),
+                    'location' => $eventData->location,
+                ]);
+
+                DB::transaction(function () use ($eventData, &$contextResponse, &$event) {
+                    $event->setupUniqueHash();
+
+                    $event->findOrSave();
+
+                    $contextResponse->contextPost->event_id = $event->id;
+                    $contextResponse->contextPost->status = ProcessStatusEnum::Completed;
+                    $contextResponse->contextPost->save();
+                });
+
+                // TODO: Вынести в обработчик события завершения формирования event
+                GenerateEventInterestsJob::dispatch($event->id);
+            } catch (\Exception $exception) {
+                $contextResponse->update(['status' => ProcessStatusEnum::Failed->value]);
+                $contextResponse->contextPost->update(['status' => ProcessStatusEnum::Failed->value]);
+                Log::error($exception->getMessage());
             }
-
-            /** @var Event $event */
-            $event = Event::query()->make([
-                'community_id' => $contextResponse->contextPost->socialLink->community_id,
-                'name' => $eventData->name,
-                'description' => $eventData->description,
-                'start_datetime' => new \DateTime($eventData->start_datetime),
-                'end_datetime' => new \DateTime($eventData->end_datetime),
-                'location' => $eventData->location,
-            ]);
-
-            DB::transaction(function () use ($eventData, &$contextResponse, &$event) {
-                $event->setupUniqueHash();
-
-                $event->findOrSave();
-
-                $contextResponse->contextPost->event_id = $event->id;
-                $contextResponse->contextPost->save();
-            });
-
-            // TODO: Вынести в обработчик события завершения формирования event
-            GenerateEventInterestsJob::dispatch($event->id);
         }
 
         $contextResponse->update(['status' => ProcessStatusEnum::Completed->value]);
