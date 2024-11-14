@@ -7,6 +7,9 @@ use Illuminate\Database\Eloquent\Model;
 
 /**
  * Интерес
+ *
+ * @property Interest|null $children
+ * @property Interest|null $parent
  */
 class Interest extends Model
 {
@@ -33,9 +36,11 @@ class Interest extends Model
         $level = 0;
         $current = $this;
 
-        while ($current->parent) {
+//        dd($current->parent()->first());
+
+        while ($current->parent()->first()) {
             $level++;
-            $current = $current->parent;
+            $current = $current->parent()->first();
         }
 
         return $level;

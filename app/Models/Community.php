@@ -5,16 +5,19 @@ namespace App\Models;
 use App\Enums\ProcessStatusEnum;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Collection;
 
 /**
  * Сообщество, группа в соц. сети.
  *
+ * @property $id
  * @property $name
  * @property $verification_status
  * @property $description
  * @property $last_checked_at
  * @property $is_verified
  * @property SocialNetwork $socialNetworks социальная сеть
+ * @property Collection<ContextPost> $contextPosts социальная сеть
  */
 class Community extends Model
 {

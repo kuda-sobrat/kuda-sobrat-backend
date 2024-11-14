@@ -3,16 +3,21 @@
 namespace App\Listeners;
 
 use App\Events\CommunityVerifiedEvent;
+use App\Jobs\FetchCommunityInterestsFromGPTJob;
+use App\Repositories\CommunityRepository;
 use Illuminate\Contracts\Queue\ShouldQueue;
-use Illuminate\Queue\InteractsWithQueue;
 
-class CommunityVerifiedListener
+/**
+ * Обработка события завершения верификации сообщества.
+ */
+class CommunityVerifiedListener implements ShouldQueue
 {
     /**
      * Create the event listener.
      */
-    public function __construct()
-    {
+    public function __construct(
+        protected CommunityRepository $communityRepository,
+    ) {
         //
     }
 
@@ -21,6 +26,6 @@ class CommunityVerifiedListener
      */
     public function handle(CommunityVerifiedEvent $event): void
     {
-        dd($event);
+        FetchCommunityInterestsFromGPTJob::dispatch($event->communityId);
     }
 }

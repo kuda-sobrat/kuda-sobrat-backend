@@ -2,11 +2,8 @@
 
 namespace App\Services;
 
-use App\Jobs\FetchEventInterestsFromGPTJob;
 use App\Models\ContextResponse;
-use App\Models\Event;
 use App\Services\ChatGPT\ChatGPTInteractionService;
-use Illuminate\Support\Facades\DB;
 
 /**
  * Сервис для работы с мероприятиями (событиями)

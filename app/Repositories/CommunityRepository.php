@@ -62,4 +62,25 @@ class CommunityRepository
     {
         return $community->contextPosts()->orderBy('created_at', 'desc')->first();
     }
+
+    /**
+     * Получает список постов с мероприятиями сообщества
+     *
+     * @param Community $community
+     * @return Collection<ContextPost>
+     */
+    public function getContextPostsWithEvents(Community $community): Collection
+    {
+        return $community->contextPosts()->with('event')->get();
+    }
+
+    /**
+     * Получает список верифицированных сообществ
+     *
+     * @return Collection<Community>
+     */
+    public function getVerifiedCommunities(): Collection
+    {
+        return Community::query()->where('is_verified', '=', true)->get();
+    }
 }

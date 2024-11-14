@@ -4,8 +4,6 @@ namespace App\Jobs;
 
 use App\Enums\ProcessStatusEnum;
 use App\Models\ContextPost;
-use App\Models\ContextRequest;
-use App\Repositories\ContextPostsRepository;
 use App\Services\Context\ContextPostService;
 use App\Services\InterestService;
 use Illuminate\Bus\Batchable;
@@ -14,7 +12,6 @@ use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
 class FetchEventInterestsFromGPTJob implements ShouldQueue
@@ -44,13 +41,13 @@ class FetchEventInterestsFromGPTJob implements ShouldQueue
         /** @var ContextPost $contextPost */
         $contextPost = ContextPost::query()->find($this->contextPostId);
 
-        $contextPost->event->status = ProcessStatusEnum::Pending;
-        $contextPost->event->save();
-
         if (!$contextPost || !$contextPost->event) {
             // TODO: Логирование
             Log::error('Пост или мероприятие не найдено');
         }
+
+        $contextPost->event->status = ProcessStatusEnum::Pending;
+        $contextPost->event->save();
 
         $interests = implode(',', $interestService->getBaseInterests()->map(function ($interest) use ($contextPost) {
             return "$interest->name[$interest->id]";

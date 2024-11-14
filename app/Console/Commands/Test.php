@@ -2,12 +2,15 @@
 
 namespace App\Console\Commands;
 
+use App\Events\CommunityVerifiedEvent;
 use App\Jobs\FetchEventInterestsFromGPTJob;
 use App\Jobs\TestJob;
 use App\Models\ContextResponse;
+use App\Repositories\InterestRepository;
 use App\Services\CommunityVerificationService;
 use App\Services\Context\ContextService;
 use App\Services\EventService;
+use App\Services\InterestService;
 use Illuminate\Console\Command;
 
 class Test extends Command
@@ -32,9 +35,12 @@ class Test extends Command
     public function handle(
         CommunityVerificationService $communityVerificationService,
         ContextService $contextService,
+        InterestRepository $interestRepository,
         EventService $eventService,
     )
     {
-        FetchEventInterestsFromGPTJob::dispatch(658);
+        CommunityVerifiedEvent::dispatch(1);
+
+//        dd($interestRepository->getInterestsByLevel(2)->pluck(['name']));
     }
 }

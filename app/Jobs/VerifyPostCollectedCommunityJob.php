@@ -4,6 +4,7 @@ namespace App\Jobs;
 
 use App\Enums\ProcessStatusEnum;
 use App\Events\CommunitiesVerifiedEvent;
+use App\Events\CommunityVerifiedEvent;
 use App\Models\Community;
 use App\Models\ContextPost;
 use App\Repositories\CommunityRepository;
@@ -63,7 +64,7 @@ class VerifyPostCollectedCommunityJob implements ShouldQueue
             Bus::batch($jobs)
                 ->then(static function (Batch $batch) use ($communityVerificationService, $community) {
                     $communityVerificationService->verifyCommunity($community);
-                    event(new CommunitiesVerifiedEvent());
+                    event(new CommunityVerifiedEvent($community->id));
                 })
                 ->dispatch();
         } else {

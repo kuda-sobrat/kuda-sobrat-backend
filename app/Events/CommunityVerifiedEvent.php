@@ -15,7 +15,7 @@ class CommunityVerifiedEvent
      * Create a new event instance.
      */
     public function __construct(
-        private int $communityId,
+        public int $communityId,
     ) {
     }
 
