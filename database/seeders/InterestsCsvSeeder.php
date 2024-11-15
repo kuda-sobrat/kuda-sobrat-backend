@@ -15,8 +15,8 @@ class InterestsCsvSeeder extends Seeder
         $relationsCsvPath = database_path('data/interest_relations.csv');
 
         // Очищаем таблицы перед импортом
-        DB::table('interest_relations')->truncate();
-        DB::table('interests')->truncate();
+        DB::table('interest_relations')->delete();
+        DB::table('interests')->delete();
 
         // Импортируем таблицу interests
         if (File::exists($interestsCsvPath)) {

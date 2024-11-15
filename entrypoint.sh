@@ -18,7 +18,10 @@ echo "База данных доступна, продолжаем выполн�
 php artisan config:clear
 
 # Выполнение миграций
+echo "Выполнение миграций..."
 php artisan migrate --force
+echo "Запуск сидеров..."
+php artisan db:seed
 
 # Запуск основного процесса (PHP-FPM)
 exec "$@"
