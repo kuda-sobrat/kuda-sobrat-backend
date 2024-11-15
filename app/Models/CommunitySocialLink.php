@@ -12,6 +12,7 @@ use Illuminate\Database\Eloquent\Model;
  * @property $social_network_id
  * @property $social_network_community_id
  * @property $path
+ * @property SocialNetwork $socialNetwork
  */
 class CommunitySocialLink extends Model
 {
@@ -23,4 +24,9 @@ class CommunitySocialLink extends Model
       'social_network_community_id',
       'path',
     ];
+
+    public function socialNetwork()
+    {
+        return $this->belongsTo(SocialNetwork::class, 'social_network_id', 'id');
+    }
 }

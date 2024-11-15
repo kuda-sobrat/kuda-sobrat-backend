@@ -53,10 +53,16 @@ class FetchEventInterestsFromGPTJob implements ShouldQueue
             return "$interest->name[$interest->id]";
         })->toArray());
 
+//        dump($contextPost->community->interests->pluck('name')->toArray());
+        $communityInterests = !empty($contextPost->community->interests)
+            ? implode(',', $contextPost->community->interests->pluck('name')->toArray())
+            : null;
+
         $prompt = view('prompts.interests_comparison', [
             'interests' => $interests,
             'context' => $contextPost->text,
             'geolocation' => $contextPost->event->location,
+            'communityInterests' => $communityInterests,
         ])->render();
 
         $contextPostService->sendPrompt($contextPost, $prompt, $type, true);

@@ -16,8 +16,10 @@ use Illuminate\Support\Collection;
  * @property $description
  * @property $last_checked_at
  * @property $is_verified
- * @property SocialNetwork $socialNetworks социальная сеть
- * @property Collection<ContextPost> $contextPosts социальная сеть
+ * @property Collection<SocialNetwork> $socialNetworks Социальные сети
+ * @property Collection<CommunitySocialLink> $socialLinks Ссылки на соц. сети
+ * @property Collection<ContextPost> $contextPosts Посты
+ * @property Collection<Interest> $interests Интересы сообщества
  */
 class Community extends Model
 {

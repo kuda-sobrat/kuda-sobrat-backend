@@ -23,7 +23,8 @@ use Illuminate\Support\Collection;
  * @property $updated_at
  * @property Event|null $event
  * @property Collection<ContextAttachment> $attachments
- * @property CommunitySocialLink socialLink
+ * @property CommunitySocialLink $socialLink
+ * @property Community $community
  */
 class ContextPost extends Model
 {
@@ -53,13 +54,18 @@ class ContextPost extends Model
     }
 
     /**
-     * TODO: Определить связь
-     *
-     * @return \Illuminate\Database\Eloquent\Relations\BelongsTo
+     * @return \Illuminate\Database\Eloquent\Relations\HasOneThrough
      */
     public function community()
     {
-        return $this->belongsTo(Community::class);
+        return $this->hasOneThrough(
+            Community::class,
+            CommunitySocialLink::class,
+            'id',
+            'id',
+            'social_link_id',
+            'community_id'
+        );
     }
 
     public function interests()

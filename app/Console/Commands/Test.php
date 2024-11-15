@@ -5,8 +5,11 @@ namespace App\Console\Commands;
 use App\Events\CommunityVerifiedEvent;
 use App\Jobs\FetchEventInterestsFromGPTJob;
 use App\Jobs\TestJob;
+use App\Models\Community;
+use App\Models\ContextPost;
 use App\Models\ContextResponse;
 use App\Repositories\InterestRepository;
+use App\Services\CommunityService;
 use App\Services\CommunityVerificationService;
 use App\Services\Context\ContextService;
 use App\Services\EventService;
@@ -37,10 +40,10 @@ class Test extends Command
         ContextService $contextService,
         InterestRepository $interestRepository,
         EventService $eventService,
+        CommunityService $communityService,
     )
     {
-        CommunityVerifiedEvent::dispatch(1);
-
+        $communityService->getCommunityInfo(3);
 //        dd($interestRepository->getInterestsByLevel(2)->pluck(['name']));
     }
 }

@@ -3,11 +3,7 @@
 namespace App\Repositories;
 
 use App\Contracts\Interfaces\InterestRepositoryInterface;
-use App\Enums\ProcessStatusEnum;
-use App\Models\Community;
-use App\Models\ContextPost;
 use App\Models\Interest;
-use Carbon\Carbon;
 use Illuminate\Support\Collection;
 
 class InterestRepository implements InterestRepositoryInterface

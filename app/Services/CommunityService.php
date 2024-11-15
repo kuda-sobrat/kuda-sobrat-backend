@@ -2,17 +2,21 @@
 
 namespace App\Services;
 
-use App\Contracts\Interfaces\SocialMediaServiceInterface;
 use App\Models\Community;
-use App\Models\ContextAttachment;
 use App\Models\ContextPost;
 use App\Models\SocialNetwork;
+use App\Repositories\CommunityRepository;
 use App\Services\SocialMedia\SocialMediaApiFactory;
 use GuzzleHttp\Exception\GuzzleException;
 use Illuminate\Support\Collection;
 
 class CommunityService
 {
+    public function __construct(
+        protected CommunityRepository $communityRepository,
+    ) {
+    }
+
     /**
      * Получает последние посты сообщества
      *
@@ -47,6 +51,26 @@ class CommunityService
         }
 
         return $allContextPosts;
+    }
+
+    /**
+     * Получает актуальную информацию о сообществе из социальных сетей
+     *
+     * @param int $id
+     * @return void
+     * @throws GuzzleException
+     */
+    public function getCommunityInfo(int $id)
+    {
+        $community = $this->communityRepository->get($id);
+        $info = new Collection();
+        foreach ($community->socialLinks as $socialLink) {
+            $socialNetworkService = SocialMediaApiFactory::getService($socialLink->socialNetwork->name);
+            $result = $socialNetworkService->getCommunityInfo($socialLink->social_network_community_id);
+            if (!empty($result)) {
+                $info->push($result);
+            }
+        }
     }
 
     /**

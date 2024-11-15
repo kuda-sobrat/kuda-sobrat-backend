@@ -44,17 +44,20 @@ class ContextRequestService implements ContextServiceInterface
             $messageContent = $apiResponse['choices'][0]['message']['content'] ?? '';
             $modelUsed = $apiResponse['model'] ?? '';
 
-            // Сохраняем ответ
+            /** @var ContextResponse $contextResponse */
             $contextResponse = ContextResponse::query()->create([
                 'context_id' => $contextRequest->id,
                 'response' => $messageContent,
                 'model' => $modelUsed,
             ]);
+            $contextResponse->contextPost->update(['status' => ProcessStatusEnum::Completed->value]);
         } catch (ConnectException $exception) {
+            $contextRequest->contextPost->update(['status' => ProcessStatusEnum::Failed->value]);
             // TODO: Логирование
             dump($exception->getMessage());
             return;
         } catch (Exception $exception) {
+            $contextRequest->contextPost->update(['status' => ProcessStatusEnum::Failed->value]);
             $contextRequest->status = ProcessStatusEnum::Failed;
             $contextRequest->save();
 

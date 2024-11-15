@@ -184,7 +184,7 @@ class VkApiService extends SocialMediaApiBaseService
     {
         $params = [
             'group_id' => abs($communityId),
-            'fields' => 'description,members_count',
+            'fields' => 'activity,description,status,interests,links',
         ];
 
         $response = $this->call('groups.getById', $params, 'POST');

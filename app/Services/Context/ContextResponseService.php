@@ -73,7 +73,6 @@ class ContextResponseService implements ContextServiceInterface
                     $contextResponse->contextPost->save();
                 });
 
-                // TODO: Вынести в обработчик события завершения формирования event
                 FetchEventInterestsFromGPTJob::dispatch($contextResponse->id);
             } catch (\Exception $exception) {
                 $contextResponse->update(['status' => ProcessStatusEnum::Failed->value]);
@@ -83,6 +82,5 @@ class ContextResponseService implements ContextServiceInterface
         }
 
         $contextResponse->update(['status' => ProcessStatusEnum::Completed->value]);
-        // TODO: отправить событие о завершении формирования event
     }
 }

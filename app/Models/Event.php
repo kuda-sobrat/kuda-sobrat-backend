@@ -22,6 +22,7 @@ use Illuminate\Support\Collection;
  * @property $created_at
  * @property $updated_at
  * @property Collection<Interest> $interests
+ * @property Collection<ContextPost> $contextPosts
  */
 class Event extends Model
 {
