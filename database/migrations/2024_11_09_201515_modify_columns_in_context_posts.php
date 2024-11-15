@@ -12,10 +12,8 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('context_posts', function (Blueprint $table) {
-//            $table->unsignedBigInteger('social_link_id')->after('id')->index()->nullable()->comment('Внешний ключ social_links');
+            $table->unsignedBigInteger('social_link_id')->after('id')->index()->nullable()->comment('Внешний ключ social_links');
             $table->foreign('social_link_id')->references('id')->on('community_social_links')->onDelete('cascade');
-//            $table->dropColumn('community_id');
-//            $table->dropColumn('source_type');
         });
     }
 
@@ -26,7 +24,6 @@ return new class extends Migration
     {
         Schema::table('context_posts', function (Blueprint $table) {
             $table->dropForeign(['social_link_id']);
-//            $table->dropColumn('social_link_id');
         });
     }
 };

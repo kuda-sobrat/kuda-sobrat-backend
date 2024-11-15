@@ -2,6 +2,9 @@ FROM php:8.1-fpm-alpine
 
 # Установка системных зависимостей
 RUN apk update && apk add --no-cache \
+    bash \
+    netcat-openbsd \
+    mysql-client \
     build-base \
     autoconf \
     git \
@@ -30,6 +33,15 @@ RUN composer install --no-interaction --prefer-dist --optimize-autoloader
 
 # Генерация ключа приложения
 RUN php artisan key:generate
+
+# Копируем скрипт entrypoint.sh
+COPY entrypoint.sh /entrypoint.sh
+
+# Даем права на выполнение
+RUN chmod +x /entrypoint.sh
+
+# Указываем скрипт в качестве точки входа
+ENTRYPOINT ["/entrypoint.sh"]
 
 # Настройка прав доступа
 RUN chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache
