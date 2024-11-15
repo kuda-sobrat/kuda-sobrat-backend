@@ -15,7 +15,6 @@ return new class extends Migration
             $table->id();
             $table->unsignedBigInteger('event_id')->index()->nullable()->comment('Внешний ключ на events');
             $table->string('source_id')->nullable()->comment('Идентификатор поста в соц. сети');
-            $table->unsignedBigInteger('community_id')->index()->comment('Внешний ключ на communities');
             $table->text('text')->comment('Исходный текст поста');
             $table->text('processed_text')->comment('Обработанный текст (поле обработки chatGPT)');
             $table->string('unique_hash')->index()->comment('Хэш поста (для предотвращения дубликатов)');

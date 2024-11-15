@@ -17,7 +17,6 @@ return new class extends Migration
             $table->unsignedBigInteger('context_request_id')->nullable()->comment('Внешний ключ на context_requests')->change();
             $table->unsignedBigInteger('context_response_id')->nullable()->comment('Внешний ключ на context_responses')->change();
             $table->json('tags')->nullable()->comment('Тэги')->change();
-            $table->string('source_type')->after('source_id')->index()->comment('Тип источника');
         });
     }
 
@@ -37,7 +36,6 @@ return new class extends Migration
             $table->unsignedBigInteger('context_request_id')->nullable(false)->default(0)->comment('Внешний ключ на context_requests')->change();
             $table->unsignedBigInteger('context_response_id')->nullable(false)->default(0)->comment('Внешний ключ на context_responses')->change();
             $table->json('tags')->nullable(false)->comment('Тэги')->change();
-            $table->dropColumn('source_type');
         });
     }
 };

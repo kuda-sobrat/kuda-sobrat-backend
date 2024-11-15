@@ -5,13 +5,16 @@ RUN apk update && apk add --no-cache \
     bash \
     netcat-openbsd \
     mysql-client \
-    build-base \
-    autoconf \
     git \
     unzip \
-    libpq \
     libzip-dev \
-    && docker-php-ext-install pdo pdo_mysql zip
+    libpq \
+    oniguruma-dev \
+    libxml2-dev \
+    icu-dev \
+    build-base \
+    autoconf \
+    && docker-php-ext-install pdo pdo_mysql mbstring zip pcntl intl xml
 
 # Установка и активация расширения Redis
 RUN pecl install redis \

@@ -38,7 +38,7 @@ class ProcessCommunityJob implements ShouldQueue
         }
 
         // TODO: Перерассмотреть условие (интервал времени)
-        if ($community->updated_at->diffInHours(now()) >= 24) {
+        if (empty($community->updated_at) || $community->updated_at->diffInHours(now()) >= 24) {
             $communityService->updateCommunityInfo($community);
         }
 

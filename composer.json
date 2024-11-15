@@ -9,6 +9,7 @@
         "api-ecosystem-for-laravel/dingo-api": "^4.3",
         "guzzlehttp/guzzle": "^7.9",
         "laravel/framework": "^10.10",
+        "laravel/horizon": "^5.29",
         "laravel/sanctum": "^3.3",
         "laravel/tinker": "^2.8",
         "league/fractal": "*"
