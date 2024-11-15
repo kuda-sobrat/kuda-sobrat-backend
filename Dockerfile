@@ -2,11 +2,17 @@ FROM php:8.1-fpm-alpine
 
 # Установка системных зависимостей
 RUN apk update && apk add --no-cache \
+    build-base \
+    autoconf \
     git \
     unzip \
     libpq \
     libzip-dev \
-    && docker-php-ext-install pdo_mysql zip
+    && docker-php-ext-install pdo pdo_mysql zip
+
+# Установка и активация расширения Redis
+RUN pecl install redis \
+      && docker-php-ext-enable redis
 
 # Установка рабочего каталога
 WORKDIR /var/www/html
