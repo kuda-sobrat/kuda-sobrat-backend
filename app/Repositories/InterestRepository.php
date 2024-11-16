@@ -24,9 +24,11 @@ class InterestRepository implements InterestRepositoryInterface
      *
      * @return Collection<mixed>
      */
-    public function getTree(): Collection
+    public function getTree(Collection $interests = null): Collection
     {
-        $interests = $this->getAllInterests();
+        if (is_null($interests)) {
+            $interests = $this->getAllInterests();
+        }
         return $this->buildTree($interests);
     }
 

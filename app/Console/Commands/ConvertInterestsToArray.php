@@ -11,6 +11,7 @@ class ConvertInterestsToArray extends Command
     protected $signature = 'interests:convert-to-array';
 
     protected $description = 'Преобразует список интересов в массив и выводит его';
+
     /**
      * Execute the console command.
      */

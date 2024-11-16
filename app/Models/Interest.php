@@ -60,4 +60,10 @@ class Interest extends Model
     {
         return $this->belongsToMany(Community::class, 'community_interest');
     }
+
+    // Отношение к пользователям
+    public function users()
+    {
+        return $this->belongsToMany(User::class);
+    }
 }

@@ -29,6 +29,21 @@ $api->version('v1', ['middleware' => ['api']], function ($api) {
         $api->get('interests', [\App\Http\Controllers\Api\V1\InterestController::class, 'index']);
     });
 
+    $api->group(['middleware' => ['auth:api']], function ($api) {
+        $api->get('interests', [\App\Http\Controllers\Api\V1\InterestController::class, 'index']);
+        $api->post('interests', [\App\Http\Controllers\Api\V1\InterestController::class, 'store']);
+        $api->put('interests/{id}', [\App\Http\Controllers\Api\V1\InterestController::class, 'update']);
+        $api->delete('interests/{id}', [\App\Http\Controllers\Api\V1\InterestController::class, 'destroy']);
+    });
+
+    // Маршруты для интересов пользователя
+    $api->group(['middleware' => 'auth:api'], function ($api) {
+        $api->get('user/interests', [\App\Http\Controllers\Api\V1\UserInterestController::class, 'index']);
+        $api->post('user/interests', [\App\Http\Controllers\Api\V1\UserInterestController::class, 'store']);
+        $api->put('user/interests', [\App\Http\Controllers\Api\V1\UserInterestController::class, 'update']);
+        $api->delete('user/interests', [\App\Http\Controllers\Api\V1\UserInterestController::class, 'destroy']);
+    });
+
 //    Примеры маршрутизации
 //    $api->group(['prefix' => 'users'], function ($api) {
 //        $api->get('/', 'App\Http\Controllers\UserController@index')->name('users.index');
