@@ -12,7 +12,7 @@ class UserInterestRepository
      */
     public function getAll(User $user): Collection
     {
-        return $user->interests()->with('children')->get();
+        return $user->interests()->get();
     }
 
     /**

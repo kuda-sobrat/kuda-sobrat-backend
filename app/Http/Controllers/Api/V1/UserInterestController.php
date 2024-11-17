@@ -11,7 +11,6 @@ use App\Repositories\UserInterestRepository;
 use App\Services\InterestService;
 use App\Transformers\BaseTransformer;
 use Dingo\Api\Routing\Helpers;
-use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 
 class UserInterestController extends Controller
