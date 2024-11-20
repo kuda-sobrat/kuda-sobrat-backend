@@ -82,7 +82,7 @@ class InterestRepository implements InterestRepositoryInterface
                         'is_paid' => $interest->is_paid,
                         // Добавьте другие свойства при необходимости
                     ],
-                    'childs' => $children,
+                    'children' => $children,
                 ]);
             }
         }

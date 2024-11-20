@@ -11,8 +11,8 @@ class InterestsCsvSeeder extends Seeder
     public function run()
     {
         // Путь к CSV файлам
-        $interestsCsvPath = database_path('data/interests.csv');
-        $relationsCsvPath = database_path('data/interest_relations.csv');
+        $interestsCsvPath = database_path('data/interests_new.csv');
+        $relationsCsvPath = database_path('data/interest_relations_new.csv');
 
         // Очищаем таблицы перед импортом
         DB::table('interest_relations')->delete();
