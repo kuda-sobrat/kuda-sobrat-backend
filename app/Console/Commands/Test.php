@@ -8,6 +8,7 @@ use App\Jobs\TestJob;
 use App\Models\Community;
 use App\Models\ContextPost;
 use App\Models\ContextResponse;
+use App\Repositories\EventRepository;
 use App\Repositories\InterestRepository;
 use App\Services\CommunityService;
 use App\Services\CommunityVerificationService;
@@ -40,10 +41,17 @@ class Test extends Command
         ContextService $contextService,
         InterestRepository $interestRepository,
         EventService $eventService,
+        EventRepository $eventRepository,
         CommunityService $communityService,
     )
     {
-        $communityService->getCommunityInfo(3);
+        $events = $eventRepository->getAll();
+        foreach ($events as $event) {
+            foreach ($event->contextPosts as $contextPost) {
+                dump($contextPost->id);
+            }
+        }
+//        $communityService->getCommunityInfo(3);
 //        dd($interestRepository->getInterestsByLevel(2)->pluck(['name']));
     }
 }

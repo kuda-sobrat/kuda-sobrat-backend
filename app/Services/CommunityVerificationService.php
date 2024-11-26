@@ -28,8 +28,9 @@ class CommunityVerificationService
      * @param Community $community
      * @return bool
      */
-    public function verifyCommunity(Community $community): bool
+    public function verifyCommunityPosts(Community $community): bool
     {
+        dump('Верификация записей сообщества ' . $community->id);
         $hasEventPosts = $community->contextPosts()
             ->whereNotNull('event_id')
             ->where('status', '=', ProcessStatusEnum::Completed)
@@ -40,6 +41,7 @@ class CommunityVerificationService
             $community->is_verified = true;
             $community->save();
 
+            dump("Сообщество {$community->id} успешно верифицировано (найдены мероприятия).");
             Log::info("Сообщество {$community->id} успешно верифицировано (найдены мероприятия).");
             return true;
         } else {
@@ -47,6 +49,7 @@ class CommunityVerificationService
             $community->is_verified = false;
             $community->save();
 
+            dump("В сообществе {$community->id} не обнаружены посты с мероприятиями.");
             Log::info("В сообществе {$community->id} не обнаружены посты с мероприятиями.");
             return false;
         }

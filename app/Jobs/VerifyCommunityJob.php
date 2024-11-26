@@ -42,13 +42,15 @@ class VerifyCommunityJob implements ShouldQueue
             $latestSavedPost = $communityRepository->getLatestPost($community);
             // Устанавливаем статус верификации в 'pending'
             $community->verification_status = 'pending';
-//            $community->save();
+            $community->save();
+
             if (empty($latestSavedPost) || (!empty($latestSavedPost) && $latestSavedPost->created_at < Carbon::now()->subDays(7))) {
                 CollectCommunityPostsJob::withChain([
-                    new VerifyPostCollectedCommunityJob($community->id),
+                    new ProcessCollectedPostsJob($community->id),
+                    new VerifyCommunityPostsJob($community->id)
                 ])->dispatch($community->id);
             } else {
-                VerifyPostCollectedCommunityJob::dispatch($community->id);
+                VerifyCommunityPostsJob::dispatch($community->id);
             }
         } catch (\Exception $e) {
             dump($e->getMessage());

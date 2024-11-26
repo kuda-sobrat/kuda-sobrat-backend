@@ -72,8 +72,8 @@ class ContextResponseService implements ContextServiceInterface
                     $contextResponse->contextPost->status = ProcessStatusEnum::Completed;
                     $contextResponse->contextPost->save();
                 });
-
-                FetchEventInterestsFromGPTJob::dispatch($contextResponse->id);
+                $contextResponse->update(['status' => ProcessStatusEnum::Completed->value]);
+                FetchEventInterestsFromGPTJob::dispatch($contextResponse->contextPost->id);
             } catch (\Exception $exception) {
                 $contextResponse->update(['status' => ProcessStatusEnum::Failed->value]);
                 $contextResponse->contextPost->update(['status' => ProcessStatusEnum::Failed->value]);

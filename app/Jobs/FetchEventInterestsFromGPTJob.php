@@ -14,6 +14,9 @@ use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\Facades\Log;
 
+/**
+ * Получает интересы мероприятия
+ */
 class FetchEventInterestsFromGPTJob implements ShouldQueue
 {
     use Batchable, Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
@@ -42,8 +45,11 @@ class FetchEventInterestsFromGPTJob implements ShouldQueue
         $contextPost = ContextPost::query()->find($this->contextPostId);
 
         if (!$contextPost || !$contextPost->event) {
-            // TODO: Логирование
-            Log::error('Пост или мероприятие не найдено');
+            dump('Пост или мероприятие не найдено: ' . $this->contextPostId);
+//             TODO: Логирование
+            Log::info('Пост или мероприятие не найдено: ' . $this->contextPostId);
+//            Log::error('Пост или мероприятие не найдено: ' . $this->contextPostId);
+            return;
         }
 
         $contextPost->event->status = ProcessStatusEnum::Pending;
@@ -53,7 +59,6 @@ class FetchEventInterestsFromGPTJob implements ShouldQueue
             return "$interest->name[$interest->id]";
         })->toArray());
 
-//        dump($contextPost->community->interests->pluck('name')->toArray());
         $communityInterests = !empty($contextPost->community->interests)
             ? implode(',', $contextPost->community->interests->pluck('name')->toArray())
             : null;
@@ -65,10 +70,19 @@ class FetchEventInterestsFromGPTJob implements ShouldQueue
             'communityInterests' => $communityInterests,
         ])->render();
 
-        $contextPostService->sendPrompt($contextPost, $prompt, $type, true);
+        try {
+            $contextPostService->sendPrompt($contextPost, $prompt, $type, true);
 
-        $request = $contextPostService->getLastRequest($contextPost, $type);
-        $contextPost->event->interests()->syncWithoutDetaching($request->contextResponse->jsonResponse);
+            $request = $contextPostService->getLastRequest($contextPost, $type);
+            $contextPost->event->interests()->syncWithoutDetaching($request->contextResponse->jsonResponse);
 
+            $contextPost->event->status = ProcessStatusEnum::Completed;
+            $contextPost->event->save();
+        } catch (\Exception $e) {
+            dump("Ошибка при определении интересов сообщества: {$e->getMessage()}");
+
+            $contextPost->event->status = ProcessStatusEnum::Failed;
+            $contextPost->event->save();
+        }
     }
 }
