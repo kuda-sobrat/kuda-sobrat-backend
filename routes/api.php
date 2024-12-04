@@ -42,6 +42,8 @@ $api->version('v1', ['middleware' => ['api']], function ($api) {
         $api->post('user/interests', [\App\Http\Controllers\Api\V1\UserInterestController::class, 'store']);
         $api->put('user/interests', [\App\Http\Controllers\Api\V1\UserInterestController::class, 'update']);
         $api->delete('user/interests', [\App\Http\Controllers\Api\V1\UserInterestController::class, 'destroy']);
+
+        $api->get('user/events', [\App\Http\Controllers\Api\V1\EventController::class, 'index']);
     });
 
 //    Примеры маршрутизации

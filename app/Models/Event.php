@@ -58,7 +58,18 @@ class Event extends Model
 
     public function contextPosts()
     {
-        return $this->hasMany(ContextPost::class);
+        return $this->hasMany(ContextPost::class)->with('community');
+    }
+
+    public function attachments() {
+        return $this->hasManyThrough(
+            ContextAttachment::class,
+            ContextPost::class,
+            'event_id',
+            'context_id',
+            'id',
+            'id'
+        );
     }
 
     public function interests()
