@@ -20,13 +20,25 @@ RUN apk update && apk add --no-cache \
 RUN pecl install redis \
       && docker-php-ext-enable redis
 
+# Добавляем аргументы UID и GID
+ARG UID
+ARG GID
+
+# Создаем группу и пользователя с указанными UID и GID
+RUN addgroup -g ${GID} docker && \
+    adduser -D -u ${UID} -G docker -s /bin/sh docker
+
 # Установка рабочего каталога
 WORKDIR /var/www/html
 
 # Копируем файлы приложения
 COPY . .
 
-RUN cp .env.example .env
+# Устанавливаем владельца файлов приложения
+RUN chown -R docker:docker /var/www/html
+
+# Переключаемся на пользователя docker **до** установки ENTRYPOINT и CMD
+USER docker
 
 # Установка Composer
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
@@ -38,16 +50,13 @@ RUN composer install --no-interaction --prefer-dist --optimize-autoloader
 RUN php artisan key:generate
 
 # Копируем скрипт entrypoint.sh
-COPY entrypoint.sh /entrypoint.sh
+COPY --chown=docker:docker entrypoint.sh /entrypoint.sh
 
 # Даем права на выполнение
 RUN chmod +x /entrypoint.sh
 
-# Указываем скрипт в качестве точки входа
+# Устанавливаем скрипт в качестве точки входа
 ENTRYPOINT ["/entrypoint.sh"]
-
-# Настройка прав доступа
-RUN chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache
 
 # Команда запуска PHP-FPM
 CMD ["php-fpm"]
