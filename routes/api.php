@@ -44,6 +44,9 @@ $api->version('v1', ['middleware' => ['api']], function ($api) {
         $api->delete('user/interests', [\App\Http\Controllers\Api\V1\UserInterestController::class, 'destroy']);
 
         $api->get('user/events', [\App\Http\Controllers\Api\V1\EventController::class, 'index']);
+        $api->get('user/events/{event}', [\App\Http\Controllers\Api\V1\EventController::class, 'show'])
+            ->middleware('record.event.view')
+            ->name('events.show');
     });
 
 //    Примеры маршрутизации

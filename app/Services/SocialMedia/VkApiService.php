@@ -72,8 +72,8 @@ class VkApiService extends SocialMediaApiBaseService
         $contextPosts = new Collection();
 
         foreach ($response['response']['items'] as $item) {
-            $isPinned = $item['is_pinned'] ?? false;
-            if (!$isPinned && $since && Carbon::parse($item['date']) < $since) {
+            $date = Carbon::parse($item['date']);
+            if ($since && $date->lte($since)) {
                 continue;
             }
 

@@ -7,6 +7,7 @@ use App\Models\ContextPost;
 use App\Models\SocialNetwork;
 use App\Repositories\CommunityRepository;
 use App\Services\SocialMedia\SocialMediaApiFactory;
+use App\Services\SocialMedia\VkApiService;
 use GuzzleHttp\Exception\GuzzleException;
 use Illuminate\Support\Collection;
 
@@ -14,6 +15,7 @@ class CommunityService
 {
     public function __construct(
         protected CommunityRepository $communityRepository,
+        protected VkApiService $vkApiService,
     ) {
     }
 
@@ -83,7 +85,6 @@ class CommunityService
     {
         // Добавьте здесь логику для обновления информации о сообществе
         // Например, запрос к API для получения новых данных
-
         // Пример:
         // $newData = $this->apiClient->getCommunityData($community->external_id);
         // $community->update($newData);

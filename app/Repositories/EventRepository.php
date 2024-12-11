@@ -9,6 +9,17 @@ use Illuminate\Support\Collection;
 
 class EventRepository implements EventRepositoryInterface
 {
+    /**
+     * Получить мероприятие по id
+     *
+     * @param $id
+     * @return Event|null
+     */
+    public function find($id): ?Event
+    {
+        // TODO: Подчеркивание
+        return Event::query()->find($id);
+    }
 
     /**
      * Получение всех мероприятий
@@ -24,5 +35,16 @@ class EventRepository implements EventRepositoryInterface
                 return $query->where('type', '=', 'photo');
             })
             ->get();
+    }
+
+    /**
+     * Увеличить кол-во просмотров
+     *
+     * @param Event $event
+     * @return void
+     */
+    public function incrementViews(Event $event): void
+    {
+        $event->increment('views');
     }
 }

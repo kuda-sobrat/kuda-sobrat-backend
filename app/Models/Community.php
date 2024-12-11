@@ -36,7 +36,8 @@ class Community extends Model
     ];
 
     protected $casts = [
-        'verification_status' => ProcessStatusEnum::class
+        'verification_status' => ProcessStatusEnum::class,
+        'last_checked_at' => 'datetime',
     ];
 
     /**

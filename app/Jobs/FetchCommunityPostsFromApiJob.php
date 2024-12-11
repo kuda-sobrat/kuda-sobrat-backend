@@ -42,7 +42,8 @@ class FetchCommunityPostsFromApiJob implements ShouldQueue
             $community = $communityRepository->get($this->communityId);
             $latestSavedPost = $communityRepository->getLatestPost($community);
 
-            $contextPosts = $communityService->getLatestPosts($community, limit: 8, since: ($latestSavedPost ? $latestSavedPost->created_at : null));
+            // TODO: Получить последние посты сообщества по дате, если верификация пройдена
+            $contextPosts = $communityService->getLatestPosts($community, limit: 100);
             $contextPosts[0]->save();
             $contextPostsRepository->savePosts($contextPosts);
         } catch (\Exception $e) {

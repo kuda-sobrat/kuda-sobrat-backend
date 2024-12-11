@@ -2,11 +2,10 @@
 
 namespace App\Console\Commands;
 
-use App\Jobs\ProcessCommunityJob;
+use App\Jobs\CollectCommunityPostsJob;
+use App\Jobs\ProcessCollectedPostsJob;
 use App\Models\Community;
-use App\Services\CommunityVerificationService;
 use Illuminate\Console\Command;
-use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Bus;
 
 class CollectCommunitiesCommand extends Command
@@ -36,7 +35,10 @@ class CollectCommunitiesCommand extends Command
             $jobs = [];
 
             foreach ($communities as $community) {
-                $jobs[] = new ProcessCommunityJob($community->id);
+                $jobs[] = (new CollectCommunityPostsJob($community->id))
+                    ->chain([
+                        new ProcessCollectedPostsJob($community->id)
+                    ]);
             }
 
             // Создаем пакет задач

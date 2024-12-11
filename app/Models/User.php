@@ -10,7 +10,15 @@ use Illuminate\Support\Collection;
 use Laravel\Sanctum\HasApiTokens;
 
 /**
- *  @property Collection<Interest> $interests
+ * @property $id
+ * @property $name
+ * @property $email
+ * @property $email_verified_at
+ * @property $password
+ * @property $remember_token
+ * @property $created_at
+ * @property $updated_at
+ * @property Collection<Interest> $interests
  */
 class User extends Authenticatable
 {
