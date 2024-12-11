@@ -2,11 +2,9 @@
 
 namespace App\Http\Controllers\Api\V1;
 
-use App\Models\Interest;
 use App\Services\InterestService;
 use App\Transformers\BaseTransformer;
 use Dingo\Api\Routing\Helpers;
-use Illuminate\Http\Request;
 use Illuminate\Routing\Controller as BaseController;
 
 class InterestController extends BaseController

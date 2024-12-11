@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Services;
+namespace App\Services\Events;
 
 /**
  * Сервис для работы с мероприятиями (событиями)

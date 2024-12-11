@@ -3,7 +3,7 @@
 namespace App\Http\Middleware;
 
 use App\Models\Event;
-use App\Services\EventViewService;
+use App\Services\Events\EventViewService;
 use Closure;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;

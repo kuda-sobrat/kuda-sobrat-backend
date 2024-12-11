@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Services;
+namespace App\Services\Events;
 
 use App\Contracts\Interfaces\EventRepositoryInterface;
 use App\Contracts\Interfaces\EventViewRepositoryInterface;

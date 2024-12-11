@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Model;
 /**
  * Социальная сеть
  *
+ * @property int $id
  * @property $name
  * @property $base_url
  */

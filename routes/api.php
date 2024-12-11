@@ -47,6 +47,10 @@ $api->version('v1', ['middleware' => ['api']], function ($api) {
         $api->get('user/events/{event}', [\App\Http\Controllers\Api\V1\EventController::class, 'show'])
             ->middleware('record.event.view')
             ->name('events.show');
+
+        $api->get('user/events/{event}/share/{socialNetwork}', [\App\Http\Controllers\Api\V1\EventShareController::class, 'share'])
+            ->middleware('record.event.view')
+            ->name('events.shares.share');
     });
 
 //    Примеры маршрутизации
