@@ -48,4 +48,13 @@ class User extends Authenticatable
     {
         return $this->belongsToMany(Interest::class);
     }
+
+    /**
+     * Мероприятия, в которых пользователь участвует.
+     */
+    public function eventsAttended()
+    {
+        return $this->belongsToMany(Event::class, 'event_attendees')
+            ->withTimestamps();
+    }
 }

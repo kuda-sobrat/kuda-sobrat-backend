@@ -2,11 +2,13 @@
 
 namespace App\Providers;
 
+use App\Contracts\Interfaces\EventAttendeeRepositoryInterface;
 use App\Contracts\Interfaces\EventRepositoryInterface;
 use App\Contracts\Interfaces\EventShareRepositoryInterface;
 use App\Contracts\Interfaces\EventViewRepositoryInterface;
 use App\Contracts\Interfaces\InterestRepositoryInterface;
 use App\Models\EventShare;
+use App\Repositories\EventAttendeeRepository;
 use App\Repositories\EventRepository;
 use App\Repositories\EventShareRepository;
 use App\Repositories\EventViewRepository;
@@ -25,6 +27,7 @@ class AppServiceProvider extends ServiceProvider
         $this->app->bind(EventRepositoryInterface::class, EventRepository::class);
         $this->app->bind(EventViewRepositoryInterface::class, EventViewRepository::class);
         $this->app->bind(EventShareRepositoryInterface::class, EventShareRepository::class);
+        $this->app->bind(EventAttendeeRepositoryInterface::class, EventAttendeeRepository::class);
     }
 
     /**

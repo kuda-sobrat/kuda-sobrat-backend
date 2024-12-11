@@ -103,4 +103,13 @@ class Event extends Model
 
         return $this;
     }
+
+    /**
+     * Участники мероприятия.
+     */
+    public function attendees()
+    {
+        return $this->belongsToMany(User::class, 'event_attendees')
+            ->withTimestamps();
+    }
 }
