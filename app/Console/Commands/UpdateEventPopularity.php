@@ -29,7 +29,7 @@ class UpdateEventPopularity extends Command
     {
         $this->info('Начинаем обновление популярности событий...');
 
-        Event::where('updated_at', '<=', now()->subHour())->chunkById(1000, function ($events) {
+        Event::where('updated_at', '<=', now()->subHour())->where('is_archived', '=', false)->chunkById(1000, function ($events) {
             $updateData = [];
 
             foreach ($events as $event) {

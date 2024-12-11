@@ -5,6 +5,7 @@ namespace App\Models;
 use App\Enums\ProcessStatusEnum;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Collection;
 
 /**
@@ -26,7 +27,7 @@ use Illuminate\Support\Collection;
  */
 class Event extends Model
 {
-    use HasFactory;
+    use HasFactory, SoftDeletes;
 
     protected $fillable = [
         'community_id',
@@ -37,12 +38,19 @@ class Event extends Model
         'end_datetime',
         'location',
         'unique_hash',
+        'is_archived',
+        'archived_at',
+        'marked_for_deletion_at',
+        'deleted_at',
     ];
 
     protected $casts = [
         'start_datetime' => 'datetime',
         'end_datetime' => 'datetime',
         'status' => ProcessStatusEnum::class,
+        'archived_at' => 'datetime',
+        'marked_for_deletion_at' => 'datetime',
+        'deleted_at' => 'datetime',
     ];
 
     public static function booted()
@@ -79,7 +87,8 @@ class Event extends Model
 
     public function setupUniqueHash()
     {
-        $this->unique_hash = Event::generateUniqueHash($this->community_id, $this->start_datetime, $this->location);
+        // TODO: location
+        $unique_hash = Event::generateUniqueHash($this->community_id, $this->start_datetime, $this->location . $this->end_datetime);
     }
 
     public static function generateUniqueHash(int $communityId, \DateTime $startDatetime, string $location): string
