@@ -22,7 +22,6 @@ class ContextService implements ContextServiceInterface
 
     /**
      * Продолжает обработку context-объекта
-     * TODO: Вынести в отдельный сервис? (process...)
      *
      * @param int $contextId
      * @param string|null $contextClass

@@ -6,6 +6,7 @@ use App\Contracts\Interfaces\EventAttendeeRepositoryInterface;
 use App\Contracts\Interfaces\EventRepositoryInterface;
 use App\Contracts\Interfaces\EventShareRepositoryInterface;
 use App\Contracts\Interfaces\EventViewRepositoryInterface;
+use App\Contracts\Interfaces\GeocodingServiceInterface;
 use App\Contracts\Interfaces\InterestRepositoryInterface;
 use App\Models\EventShare;
 use App\Repositories\EventAttendeeRepository;
@@ -13,6 +14,7 @@ use App\Repositories\EventRepository;
 use App\Repositories\EventShareRepository;
 use App\Repositories\EventViewRepository;
 use App\Repositories\InterestRepository;
+use App\Services\NominatimGeocodingService;
 use Illuminate\Support\ServiceProvider;
 
 // TODO: Вынести в RepositoryServiceProvider
@@ -28,6 +30,10 @@ class AppServiceProvider extends ServiceProvider
         $this->app->bind(EventViewRepositoryInterface::class, EventViewRepository::class);
         $this->app->bind(EventShareRepositoryInterface::class, EventShareRepository::class);
         $this->app->bind(EventAttendeeRepositoryInterface::class, EventAttendeeRepository::class);
+
+        $this->app->bind(GeocodingServiceInterface::class, function ($app) {
+            return new NominatimGeocodingService();
+        });
     }
 
     /**

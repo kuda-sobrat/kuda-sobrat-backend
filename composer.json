@@ -12,7 +12,8 @@
         "laravel/horizon": "^5.29",
         "laravel/sanctum": "^3.3",
         "laravel/tinker": "^2.8",
-        "league/fractal": "*"
+        "league/fractal": "*",
+        "spatie/geocoder": "^3.16"
     },
     "require-dev": {
         "barryvdh/laravel-debugbar": "^3.14",

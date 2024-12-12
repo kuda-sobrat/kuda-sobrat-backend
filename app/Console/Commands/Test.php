@@ -2,13 +2,17 @@
 
 namespace App\Console\Commands;
 
+use App\Contracts\Interfaces\GeocodingServiceInterface;
+use App\Providers\NominatimProvider;
 use App\Repositories\EventRepository;
 use App\Repositories\InterestRepository;
 use App\Services\CommunityService;
 use App\Services\CommunityVerificationService;
 use App\Services\Context\ContextService;
 use App\Services\Events\EventService;
+use GuzzleHttp\Client;
 use Illuminate\Console\Command;
+use Spatie\Geocoder\Geocoder;
 
 class Test extends Command
 {
@@ -38,12 +42,8 @@ class Test extends Command
         CommunityService $communityService,
     )
     {
-        $events = $eventRepository->getAll();
-        foreach ($events as $event) {
-            foreach ($event->contextPosts as $contextPost) {
-                dump($contextPost->id);
-            }
-        }
+        $geocoder = new NominatimProvider();
+        dd($geocoder->getAllCoordinatesForAddress('Воронеж, ул. Театральная, 17'));
 //        $communityService->getCommunityInfo(3);
 //        dd($interestRepository->getInterestsByLevel(2)->pluck(['name']));
     }

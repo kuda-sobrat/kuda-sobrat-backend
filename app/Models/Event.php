@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Contracts\Interfaces\GeocodingServiceInterface;
 use App\Enums\ProcessStatusEnum;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -55,6 +56,26 @@ class Event extends Model
 
     public static function booted()
     {
+        static::saving(function ($event) {
+            if ($event->isDirty('location')) {
+                // Получаем реализацию геокодера через контейнер
+                $geocodingService = app(GeocodingServiceInterface::class);
+
+                $coordinates = $geocodingService->geocode($event->location);
+
+                if ($coordinates) {
+                    $event->latitude = $coordinates['latitude'];
+                    $event->longitude = $coordinates['longitude'];
+                    $event->formatted_address = $coordinates['formatted_address'];
+                } else {
+                    // Обработка случая, когда геокодирование не удалось
+                    $event->latitude = null;
+                    $event->longitude = null;
+                    $event->formatted_address = null;
+                }
+            }
+        });
+
         static::creating(function ($event) {
             $event->setupUniqueHash();
         });
