@@ -16,7 +16,7 @@ use Illuminate\Queue\SerializesModels;
  * Получает список последних постов для сообщества, ориентируясь по последнему записанному посту
  * Если посты не определены забирает последние 8 постов
  */
-class FetchCommunityPostsFromApiJob implements ShouldQueue
+class FetchCommunityPostFromApiJob implements ShouldQueue
 {
     use Batchable, Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
@@ -43,8 +43,8 @@ class FetchCommunityPostsFromApiJob implements ShouldQueue
             $latestSavedPost = $communityRepository->getLatestPost($community);
 
             // TODO: Получить последние посты сообщества по дате, если верификация пройдена
-            $contextPosts = $communityService->getLatestPosts($community, limit: 100, since: ($latestSavedPost ? $latestSavedPost->created_at : null));
-//            $contextPosts[0]->save();
+            $contextPosts = $communityService->getLatestPosts($community, limit: 1);
+            $contextPosts[0]->save();
             $contextPostsRepository->savePosts($contextPosts);
         } catch (\Exception $e) {
             dump($e->getMessage());

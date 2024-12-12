@@ -57,6 +57,7 @@ class ContextRequestService implements ContextServiceInterface
             dump($exception->getMessage());
             return;
         } catch (Exception $exception) {
+            dump($exception->getMessage());
             $contextRequest->contextPost->update(['status' => ProcessStatusEnum::Failed->value]);
             $contextRequest->status = ProcessStatusEnum::Failed;
             $contextRequest->save();

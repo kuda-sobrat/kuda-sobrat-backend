@@ -3,16 +3,14 @@
 namespace App\Console\Commands;
 
 use App\Contracts\Interfaces\GeocodingServiceInterface;
-use App\Providers\NominatimProvider;
+use App\Jobs\VerifyCommunityJob;
 use App\Repositories\EventRepository;
 use App\Repositories\InterestRepository;
 use App\Services\CommunityService;
 use App\Services\CommunityVerificationService;
 use App\Services\Context\ContextService;
 use App\Services\Events\EventService;
-use GuzzleHttp\Client;
 use Illuminate\Console\Command;
-use Spatie\Geocoder\Geocoder;
 
 class Test extends Command
 {
@@ -42,9 +40,14 @@ class Test extends Command
         CommunityService $communityService,
     )
     {
-        $geocoder = new NominatimProvider();
-        dd($geocoder->getAllCoordinatesForAddress('Воронеж, ул. Театральная, 17'));
-//        $communityService->getCommunityInfo(3);
-//        dd($interestRepository->getInterestsByLevel(2)->pluck(['name']));
+        VerifyCommunityJob::dispatch(2);
+//        $contextEvent = ContextEvent::first();
+//        dd($contextEvent->contextPost);
+//        $contextService->processContext(349, ContextResponse::class);
+//        $contextService->processContext(59, ContextEvent::class);
+//        $contextService->processContext(1, ContextPost::class);
+//        $geocoder = new NominatimProvider();
+//        $result = $geocoder->getAllCoordinatesForAddress('ул. Плехановская, 22, Воронеж');
+//        dd($result);
     }
 }

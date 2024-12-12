@@ -6,6 +6,7 @@ use GuzzleHttp\Client;
 use Spatie\Geocoder\Exceptions\CouldNotGeocode;
 use Spatie\Geocoder\Geocoder;
 
+// TODO Вынести в отдельный сервис
 class NominatimProvider extends Geocoder
 {
     public function __construct()
@@ -83,6 +84,7 @@ class NominatimProvider extends Geocoder
         return $this->formatResponse($reverseGeocodingResponse);
     }
 
+    // TODO: форматирование ответа
     protected function formatResponse($response): array
     {
         $locations = array_map(function ($result) {

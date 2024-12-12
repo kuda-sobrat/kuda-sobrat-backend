@@ -44,9 +44,9 @@ class ContextPost extends Model
     ];
 
     protected $casts = [
-        'status' => ProcessStatusEnum::class,
-        'tags' => 'array',
+      'status' => ProcessStatusEnum::class,
     ];
+
 
     public function event()
     {

@@ -52,9 +52,6 @@ class FetchEventInterestsFromGPTJob implements ShouldQueue
             return;
         }
 
-        $contextPost->event->status = ProcessStatusEnum::Pending;
-        $contextPost->event->save();
-
         $interests = implode(',', $interestService->getBaseInterests()->map(function ($interest) use ($contextPost) {
             return "$interest->name[$interest->id]";
         })->toArray());
@@ -72,17 +69,11 @@ class FetchEventInterestsFromGPTJob implements ShouldQueue
 
         try {
             $contextPostService->sendPrompt($contextPost, $prompt, $type, true);
-
             $request = $contextPostService->getLastRequest($contextPost, $type);
             $contextPost->event->interests()->syncWithoutDetaching($request->contextResponse->jsonResponse);
-
-            $contextPost->event->status = ProcessStatusEnum::Completed;
             $contextPost->event->save();
         } catch (\Exception $e) {
             dump("Ошибка при определении интересов сообщества: {$e->getMessage()}");
-
-            $contextPost->event->status = ProcessStatusEnum::Failed;
-            $contextPost->event->save();
         }
     }
 }

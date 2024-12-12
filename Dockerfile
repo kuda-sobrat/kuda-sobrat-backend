@@ -28,6 +28,7 @@ ARG GID
 RUN addgroup -g ${GID} docker && \
     adduser -D -u ${UID} -G docker -s /bin/sh docker
 
+
 # Установка рабочего каталога
 WORKDIR /var/www/html
 
@@ -37,8 +38,15 @@ COPY . .
 # Устанавливаем владельца файлов приложения
 RUN chown -R docker:docker /var/www/html
 
+# Настраиваем PHP-FPM для запуска под пользователем docker
+RUN sed -i "s/^user = www-data/user = docker/" /usr/local/etc/php-fpm.d/www.conf && \
+    sed -i "s/^group = www-data/group = docker/" /usr/local/etc/php-fpm.d/www.conf
+
 # Переключаемся на пользователя docker **до** установки ENTRYPOINT и CMD
 USER docker
+
+# Устанавливаем права доступа для storage и bootstrap/cache
+RUN chmod -R 775 /var/www/html/storage /var/www/html/bootstrap/cache
 
 # Установка Composer
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer

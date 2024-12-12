@@ -4,10 +4,9 @@ namespace App\Services\Context;
 
 use App\Contracts\Interfaces\ContextServiceInterface;
 use App\Enums\ProcessStatusEnum;
-use App\Jobs\FetchEventInterestsFromGPTJob;
+use App\Jobs\ProcessContextJob;
+use App\Models\ContextEvent;
 use App\Models\ContextResponse;
-use App\Models\Event;
-use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
 class ContextResponseService implements ContextServiceInterface
@@ -49,38 +48,45 @@ class ContextResponseService implements ContextServiceInterface
         foreach ($response->events as $eventData) {
             try {
                 if (empty($eventData->location)) {
-                    // TODO: Логирование
+                    Log::warning("Отсутствует location для ContextResponse ID: $contextId");
                     continue;
                 }
 
-                /** @var Event $event */
-                $event = Event::query()->make([
+                // Генерируем уникальный хэш
+                $uniqueHash = hash('sha256', $contextResponse->contextPost->socialLink->community_id . $eventData->location . $eventData->start_datetime);
+
+                // Проверяем, существует ли запись с таким же хэшем
+                $existingEvent = ContextEvent::query()->where('unique_hash', $uniqueHash)->first();
+
+                if ($existingEvent) {
+                    // Запись уже существует, выводим предупреждение и пропускаем сохранение
+                    Log::warning("ContextEvent с уникальным хэшем {$uniqueHash} уже существует. Обработка продолжена");
+                    continue;
+                }
+
+                /** @var ContextEvent $contextEvent */
+                $contextEvent = ContextEvent::query()->make([
+                    'unique_hash' => $uniqueHash,
                     'community_id' => $contextResponse->contextPost->socialLink->community_id,
+                    'context_id' => $contextResponse->id,
                     'name' => $eventData->name,
                     'description' => $eventData->description,
-                    'start_datetime' => new \DateTime($eventData->start_datetime),
-                    'end_datetime' => new \DateTime($eventData->end_datetime),
+                    'start_datetime' => !empty($eventData->start_datetime) ? new \DateTime($eventData->start_datetime) : null,
+                    'end_datetime' => !empty($eventData->end_datetime) ? new \DateTime($eventData->end_datetime) : null,
                     'location' => $eventData->location,
                 ]);
 
-                DB::transaction(function () use ($eventData, &$contextResponse, &$event) {
-                    $event->setupUniqueHash();
-
-                    $event->findOrSave();
-
-                    $contextResponse->contextPost->event_id = $event->id;
-                    $contextResponse->contextPost->status = ProcessStatusEnum::Completed;
-                    $contextResponse->contextPost->save();
-                });
+                $contextEvent->save();
                 $contextResponse->update(['status' => ProcessStatusEnum::Completed->value]);
-                FetchEventInterestsFromGPTJob::dispatch($contextResponse->contextPost->id);
+
+                ProcessContextJob::dispatch($contextEvent->id, ContextEvent::class);
             } catch (\Exception $exception) {
+                dump($exception->getMessage());
                 $contextResponse->update(['status' => ProcessStatusEnum::Failed->value]);
                 $contextResponse->contextPost->update(['status' => ProcessStatusEnum::Failed->value]);
                 Log::error($exception->getMessage());
             }
         }
-
         $contextResponse->update(['status' => ProcessStatusEnum::Completed->value]);
     }
 }

@@ -3,6 +3,7 @@
 namespace App\Services\Context;
 
 use App\Contracts\Interfaces\ContextServiceInterface;
+use App\Models\ContextEvent;
 use App\Models\ContextPost;
 use App\Models\ContextRequest;
 use App\Models\ContextResponse;
@@ -34,6 +35,7 @@ class ContextService implements ContextServiceInterface
             ContextPost::class => ContextPostService::class,
             ContextRequest::class => ContextRequestService::class,
             ContextResponse::class => ContextResponseService::class,
+            ContextEvent::class => ContextEventService::class,
         ];
 
         if (!isset($serviceMap[$contextClass])) {

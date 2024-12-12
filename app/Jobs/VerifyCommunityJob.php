@@ -57,7 +57,7 @@ class VerifyCommunityJob implements ShouldQueue
             // TODO: Логирование
             // В случае ошибки устанавливаем статус 'failed'
             $community->verification_status = 'failed';
-//            $community->save();
+            $community->save();
         }
     }
 }
