@@ -16,6 +16,9 @@ use Illuminate\Support\Collection;
  * @property $description
  * @property $last_checked_at
  * @property $is_verified
+ * @property $city
+ * @property $street
+ * @property $house
  * @property Collection<SocialNetwork> $socialNetworks Социальные сети
  * @property Collection<CommunitySocialLink> $socialLinks Ссылки на соц. сети
  * @property Collection<ContextPost> $contextPosts Посты

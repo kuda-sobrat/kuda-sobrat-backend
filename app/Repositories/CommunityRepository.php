@@ -55,6 +55,16 @@ class CommunityRepository
     }
 
     /**
+     * @param int|Community $communityId
+     * @return void
+     */
+    public function getDescription($communityId)
+    {
+        $community = $communityId instanceof Community ? $communityId : $this->get($communityId);
+        return $community->description;
+    }
+
+    /**
      * @param Community $community
      * @return ContextPost|null
      */

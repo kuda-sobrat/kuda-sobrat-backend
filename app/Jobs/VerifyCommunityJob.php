@@ -47,6 +47,7 @@ class VerifyCommunityJob implements ShouldQueue
             if (empty($latestSavedPost) || (!empty($latestSavedPost) && $latestSavedPost->created_at < Carbon::now()->subDays(7))) {
                 CollectCommunityPostsJob::withChain([
                     new ProcessCollectedPostsJob($community->id),
+                    new CommunityLocationDetectionJob($community->id),
                     new VerifyCommunityPostsJob($community->id)
                 ])->dispatch($community->id);
             } else {

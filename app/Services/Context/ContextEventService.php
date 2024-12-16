@@ -27,6 +27,10 @@ class ContextEventService implements ContextServiceInterface
         /** @var ContextEvent $contextEvent */
         $contextEvent = ContextEvent::query()->findOrFail($contextId);
 
+        if (empty($contextEvent->start_datetime)) {
+            throw new \Exception("Не удалось спарсить мероприятие {$contextEvent->id}: время начала не определено");
+        }
+
         // Устанавливаем статус Pending
         $contextEvent->update(['status' => ProcessStatusEnum::Pending->value]);
 

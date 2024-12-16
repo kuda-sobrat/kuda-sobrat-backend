@@ -38,11 +38,9 @@ class ContextPostService implements ContextServiceInterface
         $contextPost->processed_text = $context;
         $contextPost->save();
 
-        // TODO: Добавить местоположение сообщества в prompt
         $prompt = view('prompts.event_extraction', [
-            'nowYear' => now()->year,
-            'nowMonth' => now()->month,
             'inputText' => $context,
+            'communityLocation' => "\nгород: {$contextPost->community->city}\nулица: {$contextPost->community->street}\nдом: {$contextPost->community->house}"
         ])->render();
 
         $this->sendPrompt($contextPost, $prompt, $type);
