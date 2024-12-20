@@ -2,7 +2,9 @@
 
 namespace App\Models;
 
+use App\Casts\PointCast;
 use App\Enums\ProcessStatusEnum;
+use App\Support\Point;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
@@ -18,7 +20,8 @@ use Illuminate\Support\Collection;
  * @property $description
  * @property $start_datetime
  * @property $end_datetime
- * @property $location
+ * @property Point $location
+ * @property string $location_name
  * @property $unique_hash
  * @property $created_at
  * @property $updated_at
@@ -37,6 +40,8 @@ class Event extends Model
         'end_datetime',
         'latitude',
         'longitude',
+        'location',
+        'location_name',
         'unique_hash',
         'popularity_score',
         'attendees',
@@ -55,6 +60,7 @@ class Event extends Model
         'archived_at' => 'datetime',
         'marked_for_deletion_at' => 'datetime',
         'deleted_at' => 'datetime',
+        'location' => PointCast::class,
     ];
 
     public function contextPosts()

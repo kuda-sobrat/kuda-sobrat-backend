@@ -2,16 +2,15 @@
 
 namespace App\Console\Commands;
 
-use App\Contracts\Interfaces\GeocodingServiceInterface;
-use App\Jobs\CommunityLocationDetectionJob;
-use App\Jobs\VerifyCommunityJob;
-use App\Models\ContextPost;
+use App\Models\ContextEvent;
+use App\Models\Event;
 use App\Repositories\EventRepository;
 use App\Repositories\InterestRepository;
 use App\Services\CommunityService;
 use App\Services\CommunityVerificationService;
 use App\Services\Context\ContextService;
 use App\Services\Events\EventService;
+use App\Support\Point;
 use Illuminate\Console\Command;
 
 class Test extends Command
@@ -42,12 +41,14 @@ class Test extends Command
         CommunityService $communityService,
     )
     {
+//        dd(571);
 //        CommunityLocationDetectionJob::dispatch(6);
 //        $contextEvent = ContextEvent::first();
 //        dd($contextEvent->contextPost);
 //        $contextService->processContext(349, ContextResponse::class);
-//        $contextService->processContext(59, ContextEvent::class);
-        $contextService->processContext(3022, ContextPost::class);
+        $contextService->processContext(559, ContextEvent::class);
+        $contextService->processContext(571, ContextEvent::class);
+//        $contextService->processContext(3022, ContextPost::class);
 //        $geocoder = new NominatimProvider();
 //        $result = $geocoder->getAllCoordinatesForAddress('ул. Плехановская, 22, Воронеж');
 //        dd($result);

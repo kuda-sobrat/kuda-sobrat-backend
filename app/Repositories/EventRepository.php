@@ -29,7 +29,6 @@ class EventRepository implements EventRepositoryInterface
     public function getAll(): Collection
     {
         return Event::query()
-            ->where('status', '=', ProcessStatusEnum::Completed->value)
             ->with('contextPosts')
             ->with('attachments', function ($query) {
                 return $query->where('type', '=', 'photo');

@@ -15,7 +15,7 @@ class CollectCommunitiesCommand extends Command
      *
      * @var string
      */
-    protected $signature = 'communities:collect';
+    protected $signature = 'communities:collect {community_id?}';
 
     /**
      * The console command description.
@@ -29,24 +29,47 @@ class CollectCommunitiesCommand extends Command
      */
     public function handle()
     {
-        $batchSize = 100; // Размер пакета (можете изменить по необходимости)
+        $communityId = $this->argument('community_id');
 
-        Community::chunk($batchSize, function ($communities) {
-            $jobs = [];
+        if ($communityId) {
+            // Обработка только указанного сообщества
+            $community = Community::find($communityId);
 
-            foreach ($communities as $community) {
-                $jobs[] = (new CollectCommunityPostsJob($community->id))
-                    ->chain([
-                        new ProcessCollectedPostsJob($community->id)
-                    ]);
+            if (!$community) {
+                $this->error("Сообщество с ID {$communityId} не найдено.");
+                return;
             }
 
-            // Создаем пакет задач
-            Bus::batch($jobs)
-                ->name('Обработка пачки сообществ')
-                ->dispatch();
-        });
+            $job = (new CollectCommunityPostsJob($community->id))
+                ->chain([
+                    new ProcessCollectedPostsJob($community->id)
+                ]);
 
-        $this->info('Задачи по обработке сообществ добавлены в очередь.');
+            Bus::batch([$job])
+                ->name("Обработка сообщества ID {$community->id}")
+                ->dispatch();
+
+            $this->info("Задача по обработке сообщества ID {$community->id} добавлена в очередь.");
+        } else {
+            $batchSize = 100; // Размер пакета (можете изменить по необходимости)
+
+            Community::chunk($batchSize, function ($communities) {
+                $jobs = [];
+
+                foreach ($communities as $community) {
+                    $jobs[] = (new CollectCommunityPostsJob($community->id))
+                        ->chain([
+                            new ProcessCollectedPostsJob($community->id)
+                        ]);
+                }
+
+                // Создаем пакет задач
+                Bus::batch($jobs)
+                    ->name('Обработка пачки сообществ')
+                    ->dispatch();
+            });
+
+            $this->info('Задачи по обработке сообществ добавлены в очередь.');
+        }
     }
 }

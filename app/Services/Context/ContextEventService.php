@@ -10,6 +10,7 @@ use App\Models\ContextPost;
 use App\Models\Event;
 use App\Models\EventAttachment;
 use App\Services\GeocoderService;
+use App\Support\Point;
 use Illuminate\Support\Facades\Log;
 
 class ContextEventService implements ContextServiceInterface
@@ -39,22 +40,21 @@ class ContextEventService implements ContextServiceInterface
             /** @var GeocoderService $geocoder */
             $geocoder = app(GeocoderService::class);
 
-            $location = $contextEvent->location;
-            $coordinates = $geocoder->geocode($location);
+            $locationString = $contextEvent->location;
+            $coordinates = $geocoder->geocode($locationString);
 
             if (empty($coordinates)) {
-                throw new \Exception("Не удалось определить координаты для локации: $location");
+                throw new \Exception("Не удалось определить координаты для локации: $locationString");
             }
 
-            $latitude = round($coordinates[0]['lat'], 4);
-            $longitude = round($coordinates[0]['lng'], 4);
+            $location = new Point(round($coordinates[0]['lat'], 4), round($coordinates[0]['lng'], 4));
 
             // Генерируем уникальный хэш
             $uniqueHash = md5(
                 $contextEvent->community_id .
                 $contextEvent->start_datetime->format('Y-m-d H:i:s') .
-                $latitude .
-                $longitude
+                $location->latitude .
+                $location->longitude
             );
 
             /** @var ?Event $existingEvent */
@@ -87,8 +87,8 @@ class ContextEventService implements ContextServiceInterface
                 'description' => $contextEvent->description,
                 'start_datetime' => $contextEvent->start_datetime,
                 'end_datetime' => $contextEvent->end_datetime,
-                'latitude' => $latitude,
-                'longitude' => $longitude ?? null,
+                'location' => $location,
+                'location_name' => $locationString,
                 'unique_hash' => $uniqueHash ?? null,
                 'community_id' => $contextEvent->community_id,
                 // Дополнительные поля

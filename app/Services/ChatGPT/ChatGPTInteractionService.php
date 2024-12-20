@@ -37,7 +37,7 @@ class ChatGPTInteractionService
                 ],
             ]);
 
-            $content = json_decode($response->getBody(), true);
+            $content = json_decode($response->getBody()->getContents(), true);
             return $content;
         } catch (\Exception $e) {
             // Логирование ошибки или повторная обработка исключения

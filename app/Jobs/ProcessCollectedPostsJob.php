@@ -49,7 +49,6 @@ class ProcessCollectedPostsJob implements ShouldQueue
                 try {
                     ProcessContextJob::dispatch($contextPost->id, ContextPost::class);
                 } catch (\Exception $e) {
-                    dump('nice');
                     dump($e->getMessage());
                 }
             }

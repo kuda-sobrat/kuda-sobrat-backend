@@ -63,7 +63,7 @@ class FetchEventInterestsFromGPTJob implements ShouldQueue
         $prompt = view('prompts.interests_comparison', [
             'interests' => $interests,
             'context' => $contextPost->text,
-            'geolocation' => $contextPost->event->location,
+            'geolocation' => $contextPost->event->location_name,
             'communityInterests' => $communityInterests,
         ])->render();
 
@@ -73,7 +73,9 @@ class FetchEventInterestsFromGPTJob implements ShouldQueue
             $contextPost->event->interests()->syncWithoutDetaching($request->contextResponse->jsonResponse);
             $contextPost->event->save();
         } catch (\Exception $e) {
-            dump("Ошибка при определении интересов сообщества: {$e->getMessage()}");
+            dump("Ошибка при определении интересов сообщества: {$e->getMessage()}
+            \nEvent: {$contextPost->event->id}
+            \nContextPost: {$contextPost->id}");
         }
     }
 }
