@@ -18,6 +18,7 @@ use Illuminate\Database\Eloquent\Model;
  * @property $start_datetime
  * @property $end_datetime
  * @property $location
+ * @property ContextPost $contextPost
  */
 class ContextEvent extends Model
 {

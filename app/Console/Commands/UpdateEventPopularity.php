@@ -29,9 +29,9 @@ class UpdateEventPopularity extends Command
     {
         $this->info('Начинаем обновление популярности событий...');
 
-        Event::where('updated_at', '<=', now()->subHour())->where('is_archived', '=', false)->chunkById(1000, function ($events) {
+        // where('updated_at', '<=', now()->subHour())->
+        Event::where('is_archived', '=', false)->chunkById(1000, function ($events) {
             $updateData = [];
-
             foreach ($events as $event) {
                 $popularity = DB::selectOne(
                     'SELECT calculate_popularity(?, ?, ?, ?) AS popularity',

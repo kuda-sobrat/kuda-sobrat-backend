@@ -9,12 +9,19 @@ use App\Models\ContextEvent;
 use App\Models\ContextPost;
 use App\Models\Event;
 use App\Models\EventAttachment;
-use App\Services\GeocoderService;
+use App\Services\FormatterService;
+use App\Services\Geocoder\GeocodingService;
 use App\Support\Point;
 use Illuminate\Support\Facades\Log;
 
 class ContextEventService implements ContextServiceInterface
 {
+    public function __construct(
+        public FormatterService $formatterService,
+        protected GeocodingService $geocodingService,
+    ) {
+    }
+
     /**
      * Продолжает обработку context-объекта
      *
@@ -36,18 +43,15 @@ class ContextEventService implements ContextServiceInterface
         $contextEvent->update(['status' => ProcessStatusEnum::Pending->value]);
 
         try {
-            // Геолокация
-            /** @var GeocoderService $geocoder */
-            $geocoder = app(GeocoderService::class);
-
             $locationString = $contextEvent->location;
-            $coordinates = $geocoder->geocode($locationString);
+            $geocodingResponse = $this->geocodingService->geocode($this->formatterService->insertCity($locationString, $contextEvent->contextPost->community->city))[0];
 
-            if (empty($coordinates)) {
+            if (empty($geocodingResponse)) {
                 throw new \Exception("Не удалось определить координаты для локации: $locationString");
             }
 
-            $location = new Point(round($coordinates[0]['lat'], 4), round($coordinates[0]['lng'], 4));
+            $location = new Point(round($geocodingResponse->coordinates->latitude, 4), round($geocodingResponse->coordinates->longitude, 4));
+            dump("\nАдрес мероприятия: {$this->formatterService->insertCity($locationString, $contextEvent->contextPost->community->city)}\n Результат:\nlat:$location->latitude,\nlong:$location->longitude)\n");
 
             // Генерируем уникальный хэш
             $uniqueHash = md5(

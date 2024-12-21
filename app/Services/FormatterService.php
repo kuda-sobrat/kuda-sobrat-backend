@@ -22,4 +22,12 @@ class FormatterService
         }
         return $json;
     }
+
+    public function insertCity(string $str, string $cityName = null): string
+    {
+        if(!preg_match("/^г\.?\s?/", $str) && !empty($cityName)) {
+            return "г.$cityName, $str";
+        }
+        return $str;
+    }
 }

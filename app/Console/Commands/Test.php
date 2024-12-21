@@ -3,14 +3,14 @@
 namespace App\Console\Commands;
 
 use App\Models\ContextEvent;
-use App\Models\Event;
 use App\Repositories\EventRepository;
 use App\Repositories\InterestRepository;
 use App\Services\CommunityService;
 use App\Services\CommunityVerificationService;
 use App\Services\Context\ContextService;
 use App\Services\Events\EventService;
-use App\Support\Point;
+use App\Services\FormatterService;
+use App\Services\Geocoder\GeocodingService;
 use Illuminate\Console\Command;
 
 class Test extends Command
@@ -39,8 +39,12 @@ class Test extends Command
         EventService $eventService,
         EventRepository $eventRepository,
         CommunityService $communityService,
+        FormatterService $formatterService,
+        GeocodingService $geocodingService,
     )
     {
+        $result = $geocodingService->geocode('г. Воронеж, ЦКИ «Матрёшка»');
+        dd($result);
 //        dd(571);
 //        CommunityLocationDetectionJob::dispatch(6);
 //        $contextEvent = ContextEvent::first();
