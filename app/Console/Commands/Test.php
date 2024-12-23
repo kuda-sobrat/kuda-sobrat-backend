@@ -2,15 +2,9 @@
 
 namespace App\Console\Commands;
 
-use App\Models\ContextEvent;
-use App\Repositories\EventRepository;
-use App\Repositories\InterestRepository;
-use App\Services\CommunityService;
-use App\Services\CommunityVerificationService;
-use App\Services\Context\ContextService;
+use App\Models\Interest;
 use App\Services\Events\EventService;
-use App\Services\FormatterService;
-use App\Services\Geocoder\GeocodingService;
+use App\Services\InterestService;
 use Illuminate\Console\Command;
 
 class Test extends Command
@@ -33,28 +27,14 @@ class Test extends Command
      * Execute the console command.
      */
     public function handle(
-        CommunityVerificationService $communityVerificationService,
-        ContextService $contextService,
-        InterestRepository $interestRepository,
-        EventService $eventService,
-        EventRepository $eventRepository,
-        CommunityService $communityService,
-        FormatterService $formatterService,
-        GeocodingService $geocodingService,
+        EventService $service
     )
     {
-        $result = $geocodingService->geocode('г. Воронеж, ЦКИ «Матрёшка»');
-        dd($result);
-//        dd(571);
-//        CommunityLocationDetectionJob::dispatch(6);
-//        $contextEvent = ContextEvent::first();
-//        dd($contextEvent->contextPost);
-//        $contextService->processContext(349, ContextResponse::class);
-        $contextService->processContext(559, ContextEvent::class);
-        $contextService->processContext(571, ContextEvent::class);
-//        $contextService->processContext(3022, ContextPost::class);
-//        $geocoder = new NominatimProvider();
-//        $result = $geocoder->getAllCoordinatesForAddress('ул. Плехановская, 22, Воронеж');
-//        dd($result);
+//        /** @var Interest $interest */
+//        $interest = Interest::query()->first();
+//        $interests = $interest->getUnfoldedInterests();
+
+        $events = $service->getEventsByInterests([181]);
+        dd($events->get()->pluck(['is_interest_matched']));
     }
 }

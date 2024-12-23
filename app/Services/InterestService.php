@@ -22,4 +22,6 @@ class InterestService
     {
         return $this->interestRepository->getBaseInterests();
     }
+
+
 }

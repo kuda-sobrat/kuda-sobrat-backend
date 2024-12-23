@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Api\V1;
 use App\Contracts\Interfaces\EventRepositoryInterface;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\V1\GetEventsByCoordinatesRequest;
+use App\Http\Requests\V1\GetEventsByInterestsRequest;
 use App\Models\Event;
 use App\Services\Events\EventService;
 use App\Services\Events\EventViewService;
@@ -12,8 +13,7 @@ use App\Support\Point;
 use App\Transformers\BaseTransformer;
 use Dingo\Api\Http\Response;
 use Dingo\Api\Routing\Helpers;
-use Illuminate\Http\Request;
-use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Auth;
 
 class EventController extends Controller
 {
@@ -80,5 +80,51 @@ class EventController extends Controller
         $events = $eventsQuery->paginate($perPage, ['*'], 'page', $page);
 
         return $this->response->item($events, BaseTransformer::class);
+    }
+
+    /**
+     * Получить мероприятия на основе интересов пользователя или переданных параметров.
+     *
+     * @param GetEventsByInterestsRequest $request
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function getByInterests(GetEventsByInterestsRequest $request)
+    {
+        // Попытка получить интересы из параметров запроса
+        $interestIds = $request->input('interests'); // Ожидается массив ID интересов
+
+        // Если пользователь аутентифицирован и интересы не указаны в параметрах
+        if (Auth::check() && empty($interestIds)) {
+            $user = Auth::user();
+            $interestIds = $user->interests()->pluck('interests.id')->toArray();
+        }
+
+        // Если интересы всё ещё не заданы, можно вернуть сообщение или использовать дефолтные значения
+        if (empty($interestIds)) {
+            return response()->json([
+                'message' => 'Интересы не указаны и не найдены у пользователя.'
+            ], 400);
+        }
+
+        // Получаем опциональные параметры из запроса
+        $options = [
+            'weight_popularity' => $request->input('weight_popularity'),
+            'weight_interest_match' => $request->input('weight_interest_match'),
+        ];
+
+        // Получаем количество записей на страницу для пагинации
+        $perPage = $request->input('per_page', 15); // По умолчанию 15 записей на страницу
+
+        // Получаем номер страницы
+        $page = $request->input('page', 1);
+
+        // Получаем запрос мероприятий из сервиса
+        $eventsQuery = $this->service->getEventsByInterests($interestIds, $options);
+
+        // Пагинация
+        $events = $eventsQuery->paginate($perPage, ['*'], 'page', $page);
+
+        // Возвращаем данные (используйте трансформер или ресурс, если требуется)
+        return response()->json($events);
     }
 }

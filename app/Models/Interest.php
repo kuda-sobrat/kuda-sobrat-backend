@@ -11,7 +11,8 @@ use Illuminate\Database\Eloquent\Model;
  * @property Interest|null $children
  * @property Interest|null $parent
  */
-class Interest extends Model
+class
+Interest extends Model
 {
     use HasFactory;
 
@@ -29,6 +30,46 @@ class Interest extends Model
     public function parent()
     {
         return $this->belongsToMany(Interest::class, 'interest_relations', 'interest_id', 'parent_interest_id');
+    }
+
+    // Рекурсивное получение всех дочерних интересов
+    public function getAllChildren()
+    {
+        $children = collect();
+
+        foreach ($this->children as $child) {
+            $children->push($child);
+            $children = $children->merge($child->getAllChildren());
+        }
+
+        return $children->unique('id');
+    }
+
+    // Рекурсивное получение всех родительских интересов
+    public function getAllParents()
+    {
+        $parents = collect();
+
+        foreach ($this->parent as $parent) {
+            $parents->push($parent);
+            $parents = $parents->merge($parent->getAllParents());
+        }
+
+        return $parents->unique('id');
+    }
+
+    // Получение полного списка интересов с учетом подчиненных и родителей
+    public function getUnfoldedInterests()
+    {
+        $interests = collect([$this]);
+
+        $parents = $this->getAllParents();
+        $children = $this->getAllChildren();
+
+        $interests = $interests->merge($parents);
+        $interests = $interests->merge($children);
+
+        return $interests->unique('id');
     }
 
     public function getLevelAttribute()
