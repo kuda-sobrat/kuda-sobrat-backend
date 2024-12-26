@@ -5,6 +5,7 @@ namespace App\Console\Commands;
 use App\Models\Interest;
 use App\Services\Events\EventService;
 use App\Services\InterestService;
+use App\Support\Point;
 use Illuminate\Console\Command;
 
 class Test extends Command
@@ -30,11 +31,8 @@ class Test extends Command
         EventService $service
     )
     {
-//        /** @var Interest $interest */
-//        $interest = Interest::query()->first();
-//        $interests = $interest->getUnfoldedInterests();
-
-        $events = $service->getEventsByInterests([181]);
-        dd($events->get()->pluck(['is_interest_matched']));
+        $events = $service->getEventsFeed(new Point(39.1967, 51.666), [181], ['per_page' => 20]);
+        dd($events);
+//        dd(collect($events->items()));
     }
 }

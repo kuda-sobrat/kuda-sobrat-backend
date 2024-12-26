@@ -33,6 +33,7 @@ class Event extends Model
     use HasFactory, SoftDeletes;
 
     protected $fillable = [
+        'id',
         'status',
         'name',
         'description',

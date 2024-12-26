@@ -6,6 +6,7 @@ use App\Contracts\Interfaces\EventRepositoryInterface;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\V1\GetEventsByCoordinatesRequest;
 use App\Http\Requests\V1\GetEventsByInterestsRequest;
+use App\Http\Requests\V1\GetEventsFeedRequest;
 use App\Models\Event;
 use App\Services\Events\EventService;
 use App\Services\Events\EventViewService;
@@ -13,7 +14,9 @@ use App\Support\Point;
 use App\Transformers\BaseTransformer;
 use Dingo\Api\Http\Response;
 use Dingo\Api\Routing\Helpers;
+use Illuminate\Pagination\CursorPaginator;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 
 class EventController extends Controller
 {
@@ -126,5 +129,43 @@ class EventController extends Controller
 
         // Возвращаем данные (используйте трансформер или ресурс, если требуется)
         return response()->json($events);
+    }
+
+    /**
+     * Возвращает ленту мероприятий с использованием курсорной пагинации.
+     *
+     * @param GetEventsFeedRequest $request
+     * @return mixed
+     */
+    public function feed(GetEventsFeedRequest $request): mixed
+    {
+        // TODO: Параметры фильтрации
+        // Получаем координаты
+        $coordinates = [
+            $request->input('latitude'),
+            $request->input('longitude')
+        ];
+
+        // Получаем список интересов
+        $interestIds = $request->input('interest_ids');
+
+        // Получаем дополнительные параметры
+        $parameters = [
+            'cursor' => $request->input('cursor'),
+            'per_page' => $request->input('per_page', 20),
+        ];
+
+        try {
+            // Получаем ленту мероприятий
+            $events = $this->service->getEventsFeed($coordinates, $interestIds, $parameters);
+
+            // TODO: Отображать сообщение и версию api
+            return $events;
+        } catch (\Exception $e) {
+            // Логируем ошибку
+            Log::error('Ошибка при получении ленты мероприятий: ' . $e->getMessage());
+
+            $this->response->error('Произошла ошибка при получении ленты мероприятий', 500);
+        }
     }
 }

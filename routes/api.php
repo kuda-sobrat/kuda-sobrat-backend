@@ -23,6 +23,7 @@ $api->version('v1', ['middleware' => ['api']], function ($api) {
     $api->post('register', [AuthController::class, 'register'])->name('register');
     $api->get('events/getByCoordinates', [\App\Http\Controllers\Api\V1\EventController::class, 'getByCoordinates']);
     $api->get('events/getByInterests', [\App\Http\Controllers\Api\V1\EventController::class, 'getByInterests']);
+    $api->get('events/feed', [\App\Http\Controllers\Api\V1\EventController::class, 'feed']);
 
     $api->group(['middleware' => 'auth:api'], function ($api) {
         $api->get('test', 'App\Http\Controllers\Api\V1\TestController@index');
