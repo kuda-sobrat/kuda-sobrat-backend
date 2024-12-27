@@ -9,4 +9,9 @@ class Point
         public $longitude,
     ) {
     }
+
+    public function isEmpty(): bool
+    {
+        return empty($this->latitude) && empty($this->longitude);
+    }
 }

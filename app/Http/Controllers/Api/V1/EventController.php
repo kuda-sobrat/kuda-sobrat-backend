@@ -141,13 +141,10 @@ class EventController extends Controller
     {
         // TODO: Параметры фильтрации
         // Получаем координаты
-        $coordinates = [
+        $coordinates = new Point(
             $request->input('latitude'),
             $request->input('longitude')
-        ];
-
-        // Получаем список интересов
-        $interestIds = $request->input('interest_ids');
+        );
 
         // Получаем дополнительные параметры
         $parameters = [
@@ -155,9 +152,11 @@ class EventController extends Controller
             'per_page' => $request->input('per_page', 20),
         ];
 
+        $interestIds = $request->input('interest_ids');
+
         try {
             // Получаем ленту мероприятий
-            $events = $this->service->getEventsFeed($coordinates, $interestIds, $parameters);
+            $events = $this->service->getEventsFeed($coordinates, $interestIds ?? [], $parameters);
 
             // TODO: Отображать сообщение и версию api
             return $events;

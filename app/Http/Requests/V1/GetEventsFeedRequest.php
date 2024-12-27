@@ -14,9 +14,9 @@ class GetEventsFeedRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'latitude'           => 'required|numeric|between:-90,90',
-            'longitude'          => 'required|numeric|between:-180,180',
-            'interest_ids'       => 'required|array',
+            'latitude'           => 'nullable|numeric|between:-90,90',
+            'longitude'          => 'nullable|numeric|between:-180,180',
+            'interest_ids'       => 'nullable|array',
             'interest_ids.*'     => 'integer',
             'cursor'             => 'nullable|string',
             'per_page'           => 'nullable|integer|min:1',

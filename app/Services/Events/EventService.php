@@ -5,7 +5,7 @@ namespace App\Services\Events;
 use App\Models\Event;
 use App\Models\Interest;
 use App\Support\Geocoder\Point;
-use Illuminate\Contracts\Pagination\Paginator;
+use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\DB;
 
@@ -89,35 +89,51 @@ class EventService
         $weightPopularity = $options['weight_popularity'] ?? config('event.weight_popularity', 0.5);
         $weightInterestMatch = $options['weight_interest_match'] ?? config('event.weight_interest_match', 0.5);
 
+        if ($weightPopularity + $weightInterestMatch < 1) {
+            $weightInterestMatch = 1 - $weightPopularity;
+        }
+
         // Получаем развернутый список интересов (включая родителей и дочерние)
         $allInterestIds = $this->getAllRelatedInterestIds($interestIds);
 
         // Получаем максимальное значение popularity_score для нормализации
         $maxPopularity = Event::max('popularity_score') ?? 1;
 
+        // Если массив интересов пустой, устанавливаем вес совпадения интересов в ноль
+        if (empty($allInterestIds)) {
+            $weightInterestMatch = 0;
+        }
+
+        // Подготавливаем условие EXISTS для интересов
+        $interestExistsCondition = !empty($allInterestIds) ? "
+        EXISTS (
+            SELECT 1 FROM event_interest ei
+            WHERE ei.event_id = events.id
+            AND ei.interest_id IN (" . implode(',', $allInterestIds) . ")
+        )
+    " : "FALSE";
+
         // Формируем запрос
         $eventsQuery = Event::selectRaw("
-            events.*,
-            CASE WHEN ei.event_id IS NOT NULL THEN 1 ELSE 0 END as is_interest_matched,
-            (
-                (? * (events.popularity_score / ?)) +
-                (? * CASE WHEN ei.event_id IS NOT NULL THEN 1 ELSE 0 END)
-            ) AS ranking_score
-        ", [
-            $weightPopularity,           // Вес популярности
-            $maxPopularity,              // Максимальная популярность
-            $weightInterestMatch        // Вес совпадения интересов
+        events.*,
+        CASE WHEN $interestExistsCondition THEN 1 ELSE 0 END AS is_interest_matched,
+        (
+            (? * (events.popularity_score / ?)) +
+            (? * CASE WHEN $interestExistsCondition THEN 1 ELSE 0 END)
+        ) AS ranking_score
+    ", [
+            $weightPopularity,    // Вес популярности
+            $maxPopularity,       // Максимальная популярность
+            $weightInterestMatch  // Вес совпадения интересов (может быть 0)
         ])
-            ->leftJoin('event_interest as ei', function ($join) use ($allInterestIds) {
-                $join->on('events.id', '=', 'ei.event_id')
-                    ->whereIn('ei.interest_id', $allInterestIds);
-            })
             ->where('events.is_archived', false)
             ->where(function ($query) {
-                $query->whereNull('events.deleted_at')->orWhere('events.deleted_at', '>', now());
+                $query->whereNull('events.deleted_at')
+                    ->orWhere('events.deleted_at', '>', now());
             })
-            ->groupBy('events.id')
-            ->orderByDesc('ranking_score');
+            // Сортировка с дополнительным полем для стабильности
+            ->orderByDesc('ranking_score')
+            ->orderByDesc('events.id');
 
         return $eventsQuery;
     }
@@ -225,18 +241,25 @@ class EventService
      * @param Point|array $coordinates Координаты ['latitude', 'longitude'] или экземпляр Point
      * @param array $interestIds Список ID интересов
      * @param array $parameters Дополнительные параметры
-     * @return Paginator
+     * @return LengthAwarePaginator
      */
-    public function getEventsFeed(mixed $coordinates, array $interestIds, array $parameters): Paginator
+    public function getEventsFeed(mixed $coordinates, array $interestIds, array $parameters): LengthAwarePaginator
     {
         $cursor = $parameters['cursor'] ?? null;
         $perPage = $parameters['per_page'] ?? 15;
 
-        // Получаем базовый запрос
-        $eventsQuery = $this->getEventsByLocationAndInterests($coordinates, $interestIds);
+        if (!empty($coordinates->latitude) || !empty($coordinates->longitude)) {
+            // Получаем базовый запрос
+            $eventsQuery = $this->getEventsByLocationAndInterests($coordinates, $interestIds);
+        } else {
+            $eventsQuery = $this->getEventsByInterests($interestIds);
+        }
 
         try {
-            $events = $eventsQuery->simplePaginate($perPage, page: $cursor);
+            $eventsQuery->with('attachments');
+
+            $events = $eventsQuery
+                ->paginate($perPage, page: $cursor);
         } catch (\Exception $e) {
             dd($e->getMessage());
         }
