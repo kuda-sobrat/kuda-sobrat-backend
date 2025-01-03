@@ -14,6 +14,7 @@ use App\Support\Point;
 use App\Transformers\BaseTransformer;
 use Dingo\Api\Http\Response;
 use Dingo\Api\Routing\Helpers;
+use Illuminate\Http\Request;
 use Illuminate\Pagination\CursorPaginator;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
@@ -167,5 +168,49 @@ class EventController extends Controller
 
             $this->response->error('Произошла ошибка при получении ленты мероприятий', 500);
         }
+    }
+
+    /**
+     * Подсказки
+     *
+     * @param Request $request
+     * @return Response
+     */
+    public function getSuggestions(Request $request)
+    {
+        $query = $request->input('query');
+
+        if (empty($query)) {
+            return $this->response->collection(collect(), BaseTransformer::class);
+        }
+
+        $suggestions = $this->service->getEventSuggestions($query);
+
+        return $this->response->collection($suggestions, BaseTransformer::class);
+    }
+
+    /**
+     * Поиск мероприятий
+     *
+     * @param Request $request
+     * @return \Illuminate\Http\JsonResponse
+     */
+    public function searchEvents(Request $request)
+    {
+        $query = $request->input('query');
+
+        if (empty($query)) {
+            return response()->json([]);
+        }
+
+        $eventsQuery = $this->service->searchEvents($query);
+
+        // TODO: Вынести в обертку (метод feed)
+        $eventsQuery->with('attachments');
+        $eventsQuery->with('eventGroup');
+
+        $events = $eventsQuery->paginate(20);
+
+        return response()->json($events);
     }
 }

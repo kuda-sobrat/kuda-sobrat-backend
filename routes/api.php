@@ -24,6 +24,8 @@ $api->version('v1', ['middleware' => ['api']], function ($api) {
     $api->get('events/getByCoordinates', [\App\Http\Controllers\Api\V1\EventController::class, 'getByCoordinates']);
     $api->get('events/getByInterests', [\App\Http\Controllers\Api\V1\EventController::class, 'getByInterests']);
     $api->get('events/feed', [\App\Http\Controllers\Api\V1\EventController::class, 'feed']);
+    $api->get('events/suggestions', [\App\Http\Controllers\Api\V1\EventController::class, 'getSuggestions']);
+    $api->get('events/search', [\App\Http\Controllers\Api\V1\EventController::class, 'searchEvents']);
     $api->get('interests', [\App\Http\Controllers\Api\V1\InterestController::class, 'index']);
 
     $api->group(['middleware' => 'auth:api'], function ($api) {

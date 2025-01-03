@@ -8,6 +8,7 @@ use App\Support\Geocoder\Point;
 use Carbon\Carbon;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 
 /**
@@ -287,6 +288,85 @@ class EventService
     }
 
     /**
+     * @param string $query
+     * @param int $limit
+     * @return Collection<Event>
+     */
+    public function getEventSuggestions(string $query, int $limit = 10): Collection
+    {
+        $suggestions = Event::select('name')
+            ->where(function ($q) use ($query) {
+                $q->where('name', 'LIKE', "%{$query}%")
+                    ->orWhere('description', 'LIKE', "%{$query}%")
+                    ->orWhere('location_name', 'LIKE', "%{$query}%");
+            })
+            ->where('is_archived', false)
+            ->whereNull('deleted_at')
+            ->groupBy('name')
+            ->limit($limit)
+            ->get();
+
+        return $suggestions;
+    }
+
+    public function searchEvents(string $query, array $options = []): Builder
+    {
+        // Извлекаем опции или устанавливаем значения по умолчанию
+        $weightPopularity = $options['weight_popularity'] ?? config('event.weight_popularity', 0.5);
+        $weightRelevance = $options['weight_relevance'] ?? config('event.weight_relevance', 0.5);
+
+        // Получаем максимальное значение popularity_score для нормализации
+        $maxPopularity = Event::max('popularity_score') ?? 1;
+
+        // Базовый запрос
+        $baseQuery = Event::select('events.*')
+            ->where('events.is_archived', false)
+            ->whereNull('events.deleted_at')
+            ->where('events.start_datetime', '>=', now())
+            ->where(function ($q) use ($query) {
+                $q->where('events.name', 'LIKE', "%{$query}%")
+                    ->orWhere('events.description', 'LIKE', "%{$query}%")
+                    ->orWhere('events.location_name', 'LIKE', "%{$query}%")
+                    ->orWhere('events.formatted_address', 'LIKE', "%{$query}%");
+            });
+
+        // Подзапрос для выбора одного мероприятия из каждой группы
+        $bestEventsSubquery = DB::table('events as e')
+            ->select('e.id')
+            ->joinSub($baseQuery, 'base', 'base.id', '=', 'e.id')
+            ->where(function($query) {
+                $query->whereRaw("
+                e.id = (
+                    SELECT e_inner.id FROM events AS e_inner
+                    WHERE e_inner.event_group_id = e.event_group_id
+                    AND e_inner.start_datetime >= NOW()
+                    ORDER BY e_inner.start_datetime ASC
+                    LIMIT 1
+                )
+            ")
+                    ->orWhereNull('e.event_group_id'); // Учитываем мероприятия без группы
+            });
+
+        // Формируем окончательный запрос
+        $eventsQuery = Event::fromSub($bestEventsSubquery, 'best_events')
+            ->join('events', 'events.id', '=', 'best_events.id')
+            ->select('events.*')
+            ->selectRaw("
+            (
+                ({$weightPopularity} * (events.popularity_score / {$maxPopularity})) +
+                ({$weightRelevance} * (
+                    (CASE WHEN events.name LIKE ? THEN 1 ELSE 0 END) +
+                    (CASE WHEN events.description LIKE ? THEN 0.5 ELSE 0 END)
+                ))
+            ) AS ranking_score
+        ", ["%{$query}%", "%{$query}%"])
+            ->orderByDesc('ranking_score')
+            ->orderBy('events.start_datetime');
+
+        return $eventsQuery;
+    }
+
+    /**
      * Возвращает порцию мероприятий согласно переданному курсору
      *
      * @param Point|array $coordinates Координаты ['latitude', 'longitude'] или экземпляр Point
@@ -312,6 +392,7 @@ class EventService
         }
 
         try {
+            // TODO: Вынести для search
             $eventsQuery->with('attachments');
             $eventsQuery->with('eventGroup');
 
