@@ -294,7 +294,7 @@ class EventService
      */
     public function getEventSuggestions(string $query, int $limit = 10): Collection
     {
-        $suggestions = Event::select('name')
+        $suggestions = Event::select('name', DB::raw('MAX(start_datetime) as latest_start_datetime'))
             ->where(function ($q) use ($query) {
                 $q->where('name', 'LIKE', "%{$query}%")
                     ->orWhere('description', 'LIKE', "%{$query}%")
@@ -303,12 +303,21 @@ class EventService
             ->where('is_archived', false)
             ->whereNull('deleted_at')
             ->groupBy('name')
+            ->orderBy('latest_start_datetime', 'DESC') // Сортируем по максимальной дате создания
             ->limit($limit)
             ->get();
 
         return $suggestions;
     }
 
+    /**
+     * Метод поиска по мероприятиям
+     *
+     * @param string $query
+     * @param array $filters
+     * @param array $options
+     * @return Builder
+     */
     public function searchEvents(string $query, array $filters = [], array $options = []): Builder
     {
         // Извлекаем опции или устанавливаем значения по умолчанию
@@ -322,7 +331,7 @@ class EventService
         $baseQuery = Event::select('events.*')
             ->where('events.is_archived', false)
             ->whereNull('events.deleted_at')
-            ->where('events.start_datetime', '>=', now())
+//            ->where('events.start_datetime', '>=', now())
 
             // Поиск по запросу
             ->where(function ($q) use ($query) {
