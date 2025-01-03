@@ -197,13 +197,21 @@ class EventController extends Controller
      */
     public function searchEvents(Request $request)
     {
+        // TODO: Вынести в Request
         $query = $request->input('query');
 
         if (empty($query)) {
             return response()->json([]);
         }
 
-        $eventsQuery = $this->service->searchEvents($query);
+        $filters = [
+            'interests' => $request->input('interests', []),
+            'location' => $request->input('location', null), // ['latitude' => ..., 'longitude' => ...]
+            'radius' => $request->input('radius', null),
+            'timeRange' => $request->input('timeRange', null), // ['start' => ..., 'end' => ...]
+        ];
+
+        $eventsQuery = $this->service->searchEvents($query, $filters);
 
         // TODO: Вынести в обертку (метод feed)
         $eventsQuery->with('attachments');

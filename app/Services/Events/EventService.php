@@ -309,7 +309,7 @@ class EventService
         return $suggestions;
     }
 
-    public function searchEvents(string $query, array $options = []): Builder
+    public function searchEvents(string $query, array $filters = [], array $options = []): Builder
     {
         // Извлекаем опции или устанавливаем значения по умолчанию
         $weightPopularity = $options['weight_popularity'] ?? config('event.weight_popularity', 0.5);
@@ -323,12 +323,55 @@ class EventService
             ->where('events.is_archived', false)
             ->whereNull('events.deleted_at')
             ->where('events.start_datetime', '>=', now())
+
+            // Поиск по запросу
             ->where(function ($q) use ($query) {
                 $q->where('events.name', 'LIKE', "%{$query}%")
                     ->orWhere('events.description', 'LIKE', "%{$query}%")
                     ->orWhere('events.location_name', 'LIKE', "%{$query}%")
                     ->orWhere('events.formatted_address', 'LIKE', "%{$query}%");
             });
+
+        // Применение фильтров
+
+        // 1. Фильтр по интересам
+        if (!empty($filters['interests'])) {
+            $interestIds = $filters['interests'];
+
+            // Получаем все связанные интересы, включая их дочерние
+            $allInterestIds = $this->getAllRelatedInterestIds($interestIds);
+
+            $baseQuery->whereExists(function ($query) use ($allInterestIds) {
+                $query->select(DB::raw(1))
+                    ->from('event_interest')
+                    ->whereColumn('event_interest.event_id', 'events.id')
+                    ->whereIn('event_interest.interest_id', $allInterestIds);
+            });
+        }
+
+        // 2. Фильтр по геолокации
+        if (!empty($filters['location']) && !empty($filters['radius'])) {
+            $location = $filters['location']; // ['latitude' => ..., 'longitude' => ...]
+            $radius = $filters['radius']; // В метрах
+
+            $wktPoint = "POINT({$location['longitude']} {$location['latitude']})";
+
+            $baseQuery->whereRaw("
+            ST_Distance_Sphere(
+                events.location,
+                ST_GeomFromText(?, 4326)
+            ) <= ?
+        ", [$wktPoint, $radius]);
+        }
+
+        // 3. Фильтр по времени
+        if (!empty($filters['timeRange'])) {
+            $timeRange = $filters['timeRange']; // ['start' => ..., 'end' => ...]
+            $start = $timeRange['start'];
+            $end = $timeRange['end'];
+
+            $baseQuery->whereBetween('events.start_datetime', [$start, $end]);
+        }
 
         // Подзапрос для выбора одного мероприятия из каждой группы
         $bestEventsSubquery = DB::table('events as e')
@@ -347,7 +390,7 @@ class EventService
                     ->orWhereNull('e.event_group_id'); // Учитываем мероприятия без группы
             });
 
-        // Формируем окончательный запрос
+        // Формируем окончательный запрос с расчетом рейтинга
         $eventsQuery = Event::fromSub($bestEventsSubquery, 'best_events')
             ->join('events', 'events.id', '=', 'best_events.id')
             ->select('events.*')
