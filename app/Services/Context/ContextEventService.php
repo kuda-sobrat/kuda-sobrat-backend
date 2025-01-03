@@ -9,6 +9,7 @@ use App\Models\ContextEvent;
 use App\Models\ContextPost;
 use App\Models\Event;
 use App\Models\EventAttachment;
+use App\Models\EventGroup;
 use App\Services\FormatterService;
 use App\Services\Geocoder\GeocodingService;
 use App\Support\Point;
@@ -20,6 +21,34 @@ class ContextEventService implements ContextServiceInterface
         public FormatterService $formatterService,
         protected GeocodingService $geocodingService,
     ) {
+    }
+
+    /**
+     * Определяет геолокацию мероприятия, предварительно сравнивая с существующими записями
+     *
+     * @param ContextEvent $contextEvent
+     * @return Point
+     * @throws \App\Exceptions\GeocodingException
+     */
+    function getEventGroupLocation(ContextEvent $contextEvent) {
+        // TODO: Кэширование запроса
+        /** @var Event | null $event */
+        $event = Event::query()->where('location_name', 'LIKE', "%{$contextEvent->location}%")->first();
+
+        if (!empty($event)) {
+            dump('$event->location:', $event->location);
+            return $event->location;
+        }
+        dump('$event->location is null');
+
+        $geocodingResponse = $this->geocodingService->geocode($this->formatterService->insertCity($contextEvent->location, $contextEvent->contextPost->community->city))[0];
+
+        if (empty($geocodingResponse)) {
+            throw new \Exception("Не удалось определить координаты для локации: $contextEvent->location");
+        }
+
+        return new Point(round($geocodingResponse->coordinates->latitude, 4), round($geocodingResponse->coordinates->longitude, 4));
+
     }
 
     /**
@@ -43,15 +72,9 @@ class ContextEventService implements ContextServiceInterface
         $contextEvent->update(['status' => ProcessStatusEnum::Pending->value]);
 
         try {
-            $locationString = $contextEvent->location;
-            $geocodingResponse = $this->geocodingService->geocode($this->formatterService->insertCity($locationString, $contextEvent->contextPost->community->city))[0];
+            $location = $this->getEventGroupLocation($contextEvent);
 
-            if (empty($geocodingResponse)) {
-                throw new \Exception("Не удалось определить координаты для локации: $locationString");
-            }
-
-            $location = new Point(round($geocodingResponse->coordinates->latitude, 4), round($geocodingResponse->coordinates->longitude, 4));
-            dump("\nАдрес мероприятия: {$this->formatterService->insertCity($locationString, $contextEvent->contextPost->community->city)}\n Результат:\nlat:$location->latitude,\nlong:$location->longitude)\n");
+            dump("\nАдрес мероприятия: {$this->formatterService->insertCity($contextEvent->location, $contextEvent->contextPost->community->city)}\n Результат:\nlat:$location->latitude,\nlong:$location->longitude)\n");
 
             // Генерируем уникальный хэш
             $uniqueHash = md5(
@@ -92,7 +115,7 @@ class ContextEventService implements ContextServiceInterface
                 'start_datetime' => $contextEvent->start_datetime,
                 'end_datetime' => $contextEvent->end_datetime,
                 'location' => $location,
-                'location_name' => $locationString,
+                'location_name' => $contextEvent->location,
                 'unique_hash' => $uniqueHash ?? null,
                 'community_id' => $contextEvent->community_id,
                 // Дополнительные поля

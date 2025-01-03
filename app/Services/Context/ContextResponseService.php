@@ -7,6 +7,7 @@ use App\Enums\ProcessStatusEnum;
 use App\Jobs\ProcessContextJob;
 use App\Models\ContextEvent;
 use App\Models\ContextResponse;
+use App\Models\EventGroup;
 use Illuminate\Support\Facades\Log;
 
 class ContextResponseService implements ContextServiceInterface
@@ -45,6 +46,8 @@ class ContextResponseService implements ContextServiceInterface
             return;
         }
 
+        $eventGroup = null;
+
         foreach ($response->events as $eventData) {
             try {
                 if (empty($eventData->location)) {
@@ -75,6 +78,15 @@ class ContextResponseService implements ContextServiceInterface
                     'end_datetime' => !empty($eventData->end_datetime) ? new \DateTime($eventData->end_datetime) : null,
                     'location' => $eventData->location,
                 ]);
+
+                if (empty($eventGroup)) {
+                    $eventGroup = EventGroup::query()->create([
+                        'name' => $eventData->name,
+                        'description' => $contextResponse->contextPost->text,
+                    ]);
+                }
+
+                $contextEvent->event_group_id = $eventGroup->id;
 
                 $contextEvent->save();
                 $contextResponse->update(['status' => ProcessStatusEnum::Completed->value]);

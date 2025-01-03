@@ -150,6 +150,7 @@ class EventController extends Controller
         $parameters = [
             'cursor' => $request->input('cursor'),
             'per_page' => $request->input('per_page', 20),
+            'is_actual' => $request->input('is_actual', true),
         ];
 
         $interestIds = $request->input('interest_ids');

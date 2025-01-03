@@ -5,6 +5,7 @@ namespace App\Services\Events;
 use App\Models\Event;
 use App\Models\Interest;
 use App\Support\Geocoder\Point;
+use Carbon\Carbon;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\DB;
@@ -106,34 +107,53 @@ class EventService
 
         // Подготавливаем условие EXISTS для интересов
         $interestExistsCondition = !empty($allInterestIds) ? "
-        EXISTS (
-            SELECT 1 FROM event_interest ei
-            WHERE ei.event_id = events.id
-            AND ei.interest_id IN (" . implode(',', $allInterestIds) . ")
-        )
+    EXISTS (
+        SELECT 1 FROM event_interest ei
+        WHERE ei.event_id = events.id
+        AND ei.interest_id IN (" . implode(',', $allInterestIds) . ")
+    )
     " : "FALSE";
 
-        // Формируем запрос
-        $eventsQuery = Event::selectRaw("
-        events.*,
-        CASE WHEN $interestExistsCondition THEN 1 ELSE 0 END AS is_interest_matched,
-        (
-            (? * (events.popularity_score / ?)) +
-            (? * CASE WHEN $interestExistsCondition THEN 1 ELSE 0 END)
-        ) AS ranking_score
-    ", [
-            $weightPopularity,    // Вес популярности
-            $maxPopularity,       // Максимальная популярность
-            $weightInterestMatch  // Вес совпадения интересов (может быть 0)
-        ])
+        // Базовый запрос для мероприятий
+        $baseQuery = Event::select('events.*')
+            ->addSelect(DB::raw("
+            CASE WHEN $interestExistsCondition THEN 1 ELSE 0 END AS is_interest_matched
+        "))
             ->where('events.is_archived', false)
-            ->where(function ($query) {
-                $query->whereNull('events.deleted_at')
-                    ->orWhere('events.deleted_at', '>', now());
-            })
+            ->whereNull('events.deleted_at')
+            ->where('events.start_datetime', '>=', now()); // Учитываем только будущие мероприятия
+
+        // Подзапрос для выбора одного мероприятия из каждой группы
+        $bestEventsSubquery = DB::table('events as e')
+            ->select('e.id')
+            ->joinSub($baseQuery, 'base', 'base.id', '=', 'e.id')
+            ->where(function($query) {
+                $query->whereRaw("
+                e.id = (
+                    SELECT e_inner.id FROM events AS e_inner
+                    WHERE e_inner.event_group_id = e.event_group_id
+                    AND e_inner.start_datetime >= NOW()
+                    ORDER BY e_inner.start_datetime ASC
+                    LIMIT 1
+                )
+            ")
+                    ->orWhereNull('e.event_group_id'); // Учитываем мероприятия без группы
+            });
+
+        // Формируем запрос, используя мероприятия из подзапроса
+        $eventsQuery = Event::fromSub($bestEventsSubquery, 'best_events')
+            ->join('events', 'events.id', '=', 'best_events.id')
+            ->select('events.*')
+            ->selectRaw("
+            CASE WHEN $interestExistsCondition THEN 1 ELSE 0 END AS is_interest_matched,
+            (
+                ({$weightPopularity} * (events.popularity_score / {$maxPopularity})) +
+                ({$weightInterestMatch} * CASE WHEN $interestExistsCondition THEN 1 ELSE 0 END)
+            ) AS ranking_score
+        ")
             // Сортировка с дополнительным полем для стабильности
             ->orderByDesc('ranking_score')
-            ->orderByDesc('events.id');
+            ->orderBy('events.start_datetime');
 
         return $eventsQuery;
     }
@@ -213,23 +233,54 @@ class EventService
         ", [$wktPoint, $radius])
             ->where('events.is_archived', false)
             ->whereNull('events.deleted_at') // Явно применяем условие для soft delete
+            ->where('events.start_datetime', '>=', now()) // Учитываем только будущие мероприятия
             ->groupBy('events.id');
 
-        // Предыдущий внешний запрос становится базовым запросом
-        $baseQueryWithRanking = Event::withoutGlobalScopes()
-            ->fromSub($baseQuery, 'base')
-            ->select('base.*')
-            ->selectRaw("
-            (
-                ({$weightPopularity} * (base.popularity_score / {$maxPopularity})) +
-                ({$weightDistance} * (1 - (base.distance / {$maxDistance}))) +
-                ({$weightInterestMatch} * base.match_score)
-            ) AS ranking_score
+        // Подзапрос для выбора одного мероприятия из каждой группы
+        $bestEventsSubquery = DB::table('events as e')
+            ->select('e.id')
+            ->joinSub($baseQuery, 'base', 'base.id', '=', 'e.id')
+            ->whereRaw("
+            e.id = (
+                SELECT e_inner.id FROM events AS e_inner
+                WHERE e_inner.event_group_id = e.event_group_id
+                AND e_inner.start_datetime >= NOW()
+                ORDER BY e_inner.start_datetime ASC
+                LIMIT 1
+            )
         ");
 
-        $finalQuery = Event::withoutGlobalScopes()
-            ->fromSub($baseQueryWithRanking, 'ranked')
-            ->select('ranked.*')
+        // Объединяем с подзапросом для расчёта ранжирования
+        $baseQueryWithRanking = Event::withoutGlobalScopes()
+            ->fromSub($bestEventsSubquery, 'best_events')
+            ->join('events', 'events.id', '=', 'best_events.id')
+            ->leftJoinSub(
+                $eventInterestMatchSubquery,
+                'eim',
+                'eim.event_id',
+                '=',
+                'events.id'
+            )
+            ->select('events.*')
+            ->selectRaw("
+            ST_Distance_Sphere(
+                events.location,
+                ST_GeomFromText(?, 4326)
+            ) AS distance,
+            COALESCE(eim.match_score, 0) AS match_score,
+            COALESCE(eim.has_interest_match, 0) AS has_interest_match,
+            (
+                ({$weightPopularity} * (events.popularity_score / {$maxPopularity})) +
+                ({$weightDistance} * (1 - (ST_Distance_Sphere(
+                    events.location,
+                    ST_GeomFromText(?, 4326)
+                ) / {$maxDistance}))) +
+                ({$weightInterestMatch} * COALESCE(eim.match_score, 0))
+            ) AS ranking_score
+        ", [$wktPoint, $wktPoint]);
+
+        // Окончательный запрос с сортировкой по рейтингу
+        $finalQuery = $baseQueryWithRanking
             ->orderByDesc('ranking_score');
 
         return $finalQuery;
@@ -247,6 +298,7 @@ class EventService
     {
         $cursor = $parameters['cursor'] ?? null;
         $perPage = $parameters['per_page'] ?? 15;
+        $isActual = $parameters['is_actual'] ?? true;
 
         if (!empty($coordinates->latitude) || !empty($coordinates->longitude)) {
             // Получаем базовый запрос
@@ -255,8 +307,13 @@ class EventService
             $eventsQuery = $this->getEventsByInterests($interestIds);
         }
 
+        if ($isActual) {
+            $eventsQuery = $eventsQuery->where('start_datetime', '>', Carbon::now());
+        }
+
         try {
             $eventsQuery->with('attachments');
+            $eventsQuery->with('eventGroup');
 
             $events = $eventsQuery
                 ->paginate($perPage, page: $cursor);

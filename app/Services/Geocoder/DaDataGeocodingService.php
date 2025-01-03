@@ -61,6 +61,7 @@ class DaDataGeocodingService implements GeocodingServiceInterface
 
             return [$result];
         } catch (GuzzleException $e) {
+            dump($address, $options);
             throw new GeocodingException('Geocoding request failed: ' . $e->getMessage(), 0, $e);
         }
     }

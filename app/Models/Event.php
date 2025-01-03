@@ -25,6 +25,7 @@ use Illuminate\Support\Collection;
  * @property $unique_hash
  * @property $created_at
  * @property $updated_at
+ * @property $event_group_id
  * @property Collection<Interest> $interests
  * @property Collection<ContextPost> $contextPosts
  */
@@ -52,6 +53,7 @@ class Event extends Model
         'archived_at',
         'marked_for_deletion_at',
         'deleted_at',
+        'event_group_id',
     ];
 
     protected $casts = [
@@ -85,5 +87,13 @@ class Event extends Model
     {
         return $this->belongsToMany(User::class, 'event_attendees')
             ->withTimestamps();
+    }
+
+    /**
+     * Связь с моделью EventGroup.
+     */
+    public function eventGroup()
+    {
+        return $this->belongsTo(EventGroup::class, 'event_group_id');
     }
 }

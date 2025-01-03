@@ -18,7 +18,9 @@ use Illuminate\Database\Eloquent\Model;
  * @property $start_datetime
  * @property $end_datetime
  * @property $location
+ * @property $event_group_id
  * @property ContextPost $contextPost
+ * @property EventGroup $eventGroup
  */
 class ContextEvent extends Model
 {
@@ -36,6 +38,7 @@ class ContextEvent extends Model
         'start_datetime',
         'end_datetime',
         'location',
+        'event_group_id',
     ];
 
     protected $casts = [
@@ -81,5 +84,13 @@ class ContextEvent extends Model
     public function contextPost()
     {
         return $this->contextResponses[0]->contextPost();
+    }
+
+    /**
+     * Связь с моделью EventGroup.
+     */
+    public function eventGroup()
+    {
+        return $this->belongsTo(EventGroup::class, 'event_group_id');
     }
 }
