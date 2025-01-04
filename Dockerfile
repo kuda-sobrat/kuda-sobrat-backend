@@ -1,7 +1,7 @@
 FROM php:8.1-fpm-alpine3.17
 
 # Замена репозиториев Alpine Linux на зеркало mirror.yandex.ru
-RUN sed -i 's|http://dl-cdn.alpinelinux.org/alpine/|http://mirror.yandex.ru/mirrors/alpine/|g' /etc/apk/repositories
+RUN sed -i 's|https://dl-cdn.alpinelinux.org/alpine/|https://mirror.yandex.ru/mirrors/alpine/|g' /etc/apk/repositories
 
 # Установка системных зависимостей и расширения Redis
 RUN apk update && apk add --no-cache \
