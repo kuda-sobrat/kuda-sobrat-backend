@@ -118,6 +118,7 @@ class ContextEventService implements ContextServiceInterface
                 'location_name' => $contextEvent->location,
                 'unique_hash' => $uniqueHash ?? null,
                 'community_id' => $contextEvent->community_id,
+                'event_group_id' => $contextEvent->event_group_id,
                 // Дополнительные поля
             ]);
 

@@ -10,6 +10,7 @@ use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 /**
  * Сервис для работы с мероприятиями (событиями)
@@ -426,32 +427,59 @@ class EventService
      * @param array $parameters Дополнительные параметры
      * @return LengthAwarePaginator
      */
-    public function getEventsFeed(mixed $coordinates, array $interestIds, array $parameters): LengthAwarePaginator
+    public function getEventsFeed(mixed $coordinates, array $interestIds, array $parameters, array $filters = []): LengthAwarePaginator
     {
         $cursor = $parameters['cursor'] ?? null;
         $perPage = $parameters['per_page'] ?? 15;
         $isActual = $parameters['is_actual'] ?? true;
 
+        // Получаем базовый запрос
         if (!empty($coordinates->latitude) || !empty($coordinates->longitude)) {
-            // Получаем базовый запрос
             $eventsQuery = $this->getEventsByLocationAndInterests($coordinates, $interestIds);
         } else {
             $eventsQuery = $this->getEventsByInterests($interestIds);
         }
 
+        // Применяем фильтр по времени (актуальности)
         if ($isActual) {
-            $eventsQuery = $eventsQuery->where('start_datetime', '>', Carbon::now());
+            $eventsQuery->where('start_datetime', '>', Carbon::now());
+        }
+
+        // Применяем дополнительные фильтры
+
+        // Фильтрация по радиусу и местоположению
+        if (!empty($filters['radius']) && !empty($filters['location']['latitude']) && !empty($filters['location']['longitude'])) {
+            $latitude = $filters['location']['latitude'];
+            $longitude = $filters['location']['longitude'];
+            $radius = $filters['radius'];
+
+            $eventsQuery->whereRaw("
+            ST_Distance_Sphere(
+                point(longitude, latitude),
+                point(?, ?)
+            ) <= ?
+        ", [$longitude, $latitude, $radius]);
+        }
+
+        // Фильтрация по временным диапазонам
+        if (!empty($filters['timeRange']['start']) && !empty($filters['timeRange']['end'])) {
+            $startTime = $filters['timeRange']['start'];
+            $endTime = $filters['timeRange']['end'];
+
+            $eventsQuery->whereBetween('start_datetime', [$startTime, $endTime]);
         }
 
         try {
-            // TODO: Вынести для search
+            // Загружаем связанные данные
             $eventsQuery->with('attachments');
             $eventsQuery->with('eventGroup');
 
-            $events = $eventsQuery
-                ->paginate($perPage, page: $cursor);
+            // Пагинация результатов
+            $events = $eventsQuery->paginate($perPage, ['*'], 'page', $cursor);
         } catch (\Exception $e) {
-            dd($e->getMessage());
+            // Логируем ошибку
+            Log::error('Ошибка при получении ленты мероприятий: ' . $e->getMessage());
+            throw $e;
         }
 
         return $events;

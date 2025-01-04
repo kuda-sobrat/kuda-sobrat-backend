@@ -140,7 +140,6 @@ class EventController extends Controller
      */
     public function feed(GetEventsFeedRequest $request): mixed
     {
-        // TODO: Параметры фильтрации
         // Получаем координаты
         $coordinates = new Point(
             $request->input('latitude'),
@@ -154,11 +153,22 @@ class EventController extends Controller
             'is_actual' => $request->input('is_actual', true),
         ];
 
-        $interestIds = $request->input('interest_ids');
+        // Получаем идентификаторы интересов
+        $interestIds = $request->input('interest_ids', []);
+
+        // Получаем дополнительные фильтры
+        $filters = [
+            'location' => [
+                'latitude' => $request->input('latitude'),
+                'longitude' => $request->input('longitude')
+            ],
+            'radius' => $request->input('radius', null),
+            'timeRange' => $request->input('timeRange', null), // ['start' => ..., 'end' => ...]
+        ];
 
         try {
             // Получаем ленту мероприятий
-            $events = $this->service->getEventsFeed($coordinates, $interestIds ?? [], $parameters);
+            $events = $this->service->getEventsFeed($coordinates, $interestIds, $parameters, $filters);
 
             // TODO: Отображать сообщение и версию api
             return $events;
