@@ -27,6 +27,7 @@ $api->version('v1', ['middleware' => ['api']], function ($api) {
     $api->get('events/suggestions', [\App\Http\Controllers\Api\V1\EventController::class, 'getSuggestions']);
     $api->get('events/search', [\App\Http\Controllers\Api\V1\EventController::class, 'searchEvents']);
     $api->get('interests', [\App\Http\Controllers\Api\V1\InterestController::class, 'index']);
+    $api->get('group/{group}/events/', [\App\Http\Controllers\Api\V1\GroupController::class, 'getGroupEvents']);
 
     $api->group(['middleware' => 'auth:api'], function ($api) {
         $api->get('test', 'App\Http\Controllers\Api\V1\TestController@index');
