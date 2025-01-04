@@ -7,13 +7,16 @@
     "require": {
         "php": "^8.1",
         "api-ecosystem-for-laravel/dingo-api": "^4.3",
-        "guzzlehttp/guzzle": "^7.2",
+        "guzzlehttp/guzzle": "^7.9",
         "laravel/framework": "^10.10",
+        "laravel/horizon": "^5.29",
         "laravel/sanctum": "^3.3",
         "laravel/tinker": "^2.8",
-        "league/fractal": "*"
+        "league/fractal": "*",
+        "spatie/geocoder": "^3.16"
     },
     "require-dev": {
+        "barryvdh/laravel-debugbar": "^3.14",
         "fakerphp/faker": "^1.9.1",
         "laravel/pint": "^1.0",
         "laravel/sail": "^1.18",

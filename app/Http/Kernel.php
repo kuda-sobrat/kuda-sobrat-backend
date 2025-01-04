@@ -2,10 +2,15 @@
 
 namespace App\Http;
 
+use App\Http\Middleware\RecordEventView;
 use Illuminate\Foundation\Http\Kernel as HttpKernel;
 
 class Kernel extends HttpKernel
 {
+    protected $routeMiddleware = [
+        'record.event.view' => RecordEventView::class,
+    ];
+
     /**
      * The application's global HTTP middleware stack.
      *

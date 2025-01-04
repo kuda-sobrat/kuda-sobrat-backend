@@ -2,6 +2,7 @@
 
 namespace App\Providers;
 
+use App\Services\VkService;
 use App\Transformers\BaseTransformer;
 use Dingo\Api\Transformer\Adapter\Fractal;
 use Dingo\Api\Transformer\Factory;
@@ -18,12 +19,9 @@ class ApiServiceProvider extends ServiceProvider
         $this->app['Dingo\Api\Transformer\Factory']->setAdapter(function ($app) {
             return new BaseTransformer(new Manager);
         });
-
-//        app(Factory::class)->register('Base', BaseTransformer::class);
-//        app('Dingo\Api\Transformer\Factory')->setAdapter(function ($app) {
-//            return new Fractal(new Manager, 'include', ',');
-//        });
-//        dd(app('Dingo\Api\Transformer\Factory'));
+        $this->app->singleton(VkService::class, function ($app) {
+            return new VkService();
+        });
     }
 
     /**
