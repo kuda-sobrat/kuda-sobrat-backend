@@ -17,7 +17,6 @@ RUN apk update && apk add --no-cache \
     icu-dev \
     build-base \
     autoconf \
-    php81-pecl-redis \
     && docker-php-ext-install \
     pdo \
     pdo_mysql \
@@ -25,7 +24,9 @@ RUN apk update && apk add --no-cache \
     zip \
     pcntl \
     intl \
-    xml
+    xml \
+    && pecl install redis \
+    && docker-php-ext-enable redis
 
 # Добавляем аргументы UID и GID
 ARG UID
@@ -48,9 +49,6 @@ RUN chown -R docker:docker /var/www/html
 RUN sed -i 's/^user = www-data/user = docker/' /usr/local/etc/php-fpm.d/www.conf && \
     sed -i 's/^group = www-data/group = docker/' /usr/local/etc/php-fpm.d/www.conf
 
-# Переключаемся на пользователя docker **до** установки ENTRYPOINT и CMD
-USER docker
-
 # Устанавливаем права доступа для storage и bootstrap/cache
 RUN chmod -R 775 /var/www/html/storage /var/www/html/bootstrap/cache
 
@@ -68,6 +66,9 @@ COPY --chown=docker:docker entrypoint.sh /entrypoint.sh
 
 # Даем права на выполнение
 RUN chmod +x /entrypoint.sh
+
+# Переключаемся на пользователя docker **после** всех установок
+USER docker
 
 # Устанавливаем скрипт в качестве точки входа
 ENTRYPOINT ["/entrypoint.sh"]
