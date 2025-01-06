@@ -55,7 +55,13 @@ class DaDataGeocodingService implements GeocodingServiceInterface
 
             $result = new GeocodingResult();
             $result->coordinates = new Point((float)$data[0]['geo_lat'], (float)$data[0]['geo_lon']);
-            $result->formattedAddress = $data[0]['result'];
+            
+	    // TODO: ERror
+	    if(empty($data[0]['result'])) {
+		throw new \Exception();
+	    }
+
+	    $result->formattedAddress = $data[0]['result'];
             $result->components = $this->extractComponents($data[0]);
             $result->accuracy = $this->mapQualityCodeToAccuracy($data[0]['qc_geo']);
 
@@ -63,7 +69,10 @@ class DaDataGeocodingService implements GeocodingServiceInterface
         } catch (GuzzleException $e) {
             dump($address, $options);
             throw new GeocodingException('Geocoding request failed: ' . $e->getMessage(), 0, $e);
-        }
+        } catch (\Exception $e) {
+	    dump($e);
+	    return [];
+	}
     }
 
     public function reverseGeocode(Point $coordinates, array $options = []): ReverseGeocodingResult
