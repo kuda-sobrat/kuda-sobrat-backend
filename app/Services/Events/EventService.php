@@ -90,36 +90,39 @@ class EventService
     {
         // Получаем параметры из опций или из конфига по умолчанию
         $weightPopularity = $options['weight_popularity'] ?? config('event.weight_popularity', 0.5);
-        $weightInterestMatch = $options['weight_interest_match'] ?? config('event.weight_interest_match', 0.5);
 
-        if ($weightPopularity + $weightInterestMatch < 1) {
-            $weightInterestMatch = 1 - $weightPopularity;
-        }
-
-        // Получаем развернутый список интересов (включая родителей и дочерние)
+        // Получаем полный список интересов (включая родителей и дочерние)
         $allInterestIds = $this->getAllRelatedInterestIds($interestIds);
+
+        // Если массив интересов пустой, устанавливаем значение по умолчанию
+        if (empty($allInterestIds)) {
+            $allInterestIds = []; // Или можете настроить поведение без интересов
+        }
 
         // Получаем максимальное значение popularity_score для нормализации
         $maxPopularity = Event::max('popularity_score') ?? 1;
 
-        // Если массив интересов пустой, устанавливаем вес совпадения интересов в ноль
-        if (empty($allInterestIds)) {
-            $weightInterestMatch = 0;
-        }
-
-        // Подготавливаем условие EXISTS для интересов
-        $interestExistsCondition = !empty($allInterestIds) ? "
-    EXISTS (
-        SELECT 1 FROM event_interest ei
-        WHERE ei.event_id = events.id
-        AND ei.interest_id IN (" . implode(',', $allInterestIds) . ")
-    )
-    " : "FALSE";
+        // Подзапрос для расчёта количества совпавших интересов
+        $eventInterestMatchSubquery = DB::table('event_interest')
+            ->select(
+                'event_interest.event_id',
+                DB::raw("COUNT(DISTINCT event_interest.interest_id) AS matched_interests")
+            )
+            ->whereIn('event_interest.interest_id', $allInterestIds)
+            ->groupBy('event_interest.event_id');
 
         // Базовый запрос для мероприятий
         $baseQuery = Event::select('events.*')
+            ->leftJoinSub(
+                $eventInterestMatchSubquery,
+                'eim',
+                'eim.event_id',
+                '=',
+                'events.id'
+            )
             ->addSelect(DB::raw("
-            CASE WHEN $interestExistsCondition THEN 1 ELSE 0 END AS is_interest_matched
+            COALESCE(eim.matched_interests, 0) AS matched_interests,
+            CASE WHEN eim.matched_interests IS NOT NULL THEN 1 ELSE 0 END AS is_interest_matched
         "))
             ->where('events.is_archived', false)
             ->whereNull('events.deleted_at')
@@ -145,17 +148,24 @@ class EventService
         // Формируем запрос, используя мероприятия из подзапроса
         $eventsQuery = Event::fromSub($bestEventsSubquery, 'best_events')
             ->join('events', 'events.id', '=', 'best_events.id')
+            ->leftJoinSub(
+                $eventInterestMatchSubquery,
+                'eim',
+                'eim.event_id',
+                '=',
+                'events.id'
+            )
             ->select('events.*')
             ->selectRaw("
-            CASE WHEN $interestExistsCondition THEN 1 ELSE 0 END AS is_interest_matched,
-            (
-                ({$weightPopularity} * (events.popularity_score / {$maxPopularity})) +
-                ({$weightInterestMatch} * CASE WHEN $interestExistsCondition THEN 1 ELSE 0 END)
-            ) AS ranking_score
+            COALESCE(eim.matched_interests, 0) AS matched_interests,
+            CASE WHEN eim.matched_interests IS NOT NULL THEN 1 ELSE 0 END AS is_interest_matched,
+            ({$weightPopularity} * (events.popularity_score / {$maxPopularity})) AS popularity_score_normalized
         ")
-            // Сортировка с дополнительным полем для стабильности
-            ->orderByDesc('ranking_score')
-            ->orderBy('events.start_datetime');
+            // Сортировка с приоритетом совпадения интересов
+            ->orderByDesc('is_interest_matched')       // Сначала мероприятия с совпадением интересов
+            ->orderByDesc('matched_interests')         // Затем по количеству совпавших интересов
+            ->orderByDesc('popularity_score_normalized') // Затем по популярности
+            ->orderBy('events.start_datetime');        // Затем по дате начала
 
         return $eventsQuery;
     }
@@ -180,31 +190,16 @@ class EventService
 
         // Извлекаем опции или устанавливаем значения по умолчанию
         $radius = $options['default_radius'] ?? config('event.default_radius', 0.3); // в метрах
-        $weightPopularity = $options['weight_popularity'] ?? config('event.weight_popularity', 0.3);
-        $weightDistance = $options['weight_distance'] ?? config('event.weight_distance', 0.3);
-        $weightInterestMatch = $options['weight_interest_match'] ?? config('event.weight_interest_match', 10);
-
-        // Максимальные значения для нормализации
-        $maxPopularity = $options['max_popularity'] ?? config('event.max_popularity', 100); // Максимальная популярность
-        $maxDistance = $options['max_distance'] ?? config('event.max_distance', $radius); // Максимальное расстояние
 
         // Получаем все интересы, включая их дочерние (учет иерархии)
         $allInterestIds = $this->getAllRelatedInterestIds($interestIds);
 
-        // Получаем количество интересов пользователя для нормализации match_score
-        $userInterestsCount = count($allInterestIds);
-
-        // Если нет интересов, устанавливаем значение по умолчанию
-        if ($userInterestsCount === 0) {
-            $userInterestsCount = 1;
-        }
-
-        // Подзапрос для расчёта match_score и флага has_interest_match
+        // Подзапрос для расчёта количества совпавших интересов и флага наличия совпадения
         $eventInterestMatchSubquery = DB::table('event_interest')
             ->select(
                 'event_interest.event_id',
-                DB::raw("COUNT(DISTINCT event_interest.interest_id) / {$userInterestsCount} as match_score"),
-                DB::raw("1 as has_interest_match") // Флаг, указывающий на наличие совпадения интересов
+                DB::raw("COUNT(DISTINCT event_interest.interest_id) AS matched_interests"),
+                DB::raw("1 AS has_interest_match")
             )
             ->whereIn('event_interest.interest_id', $allInterestIds)
             ->groupBy('event_interest.event_id');
@@ -217,7 +212,7 @@ class EventService
                 events.location,
                 ST_GeomFromText(?, 4326)
             ) AS distance,
-            COALESCE(eim.match_score, 0) AS match_score,
+            COALESCE(eim.matched_interests, 0) AS matched_interests,
             COALESCE(eim.has_interest_match, 0) AS has_interest_match
         ", [$wktPoint])
             ->leftJoinSub(
@@ -252,8 +247,8 @@ class EventService
             )
         ");
 
-        // Объединяем с подзапросом для расчёта ранжирования
-        $baseQueryWithRanking = Event::withoutGlobalScopes()
+        // Объединяем с подзапросом и применяем сортировку
+        $finalQuery = Event::withoutGlobalScopes()
             ->fromSub($bestEventsSubquery, 'best_events')
             ->join('events', 'events.id', '=', 'best_events.id')
             ->leftJoinSub(
@@ -269,21 +264,13 @@ class EventService
                 events.location,
                 ST_GeomFromText(?, 4326)
             ) AS distance,
-            COALESCE(eim.match_score, 0) AS match_score,
-            COALESCE(eim.has_interest_match, 0) AS has_interest_match,
-            (
-                ({$weightPopularity} * (events.popularity_score / {$maxPopularity})) +
-                ({$weightDistance} * (1 - (ST_Distance_Sphere(
-                    events.location,
-                    ST_GeomFromText(?, 4326)
-                ) / {$maxDistance}))) +
-                ({$weightInterestMatch} * COALESCE(eim.match_score, 0))
-            ) AS ranking_score
-        ", [$wktPoint, $wktPoint]);
-
-        // Окончательный запрос с сортировкой по рейтингу
-        $finalQuery = $baseQueryWithRanking
-            ->orderByDesc('ranking_score');
+            COALESCE(eim.matched_interests, 0) AS matched_interests,
+            COALESCE(eim.has_interest_match, 0) AS has_interest_match
+        ", [$wktPoint])
+            ->orderByDesc('has_interest_match')       // Сначала мероприятия с совпадением интересов
+            ->orderByDesc('matched_interests')        // Затем по количеству совпавших интересов
+            ->orderBy('distance')                     // Затем по расстоянию
+            ->orderByDesc('events.popularity_score'); // Затем по популярности
 
         return $finalQuery;
     }

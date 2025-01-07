@@ -4,6 +4,7 @@ namespace App\Console\Commands;
 
 use App\Enums\ProcessStatusEnum;
 use App\Models\ContextEvent;
+use App\Models\ContextPost;
 use App\Models\Interest;
 use App\Services\Context\ContextService;
 use App\Services\Events\EventService;
@@ -35,12 +36,16 @@ class Test extends Command
         ContextService $contextService,
     )
     {
-        $contextEventFailed = ContextEvent::query()->where('status', '=', ProcessStatusEnum::Failed->value)->orderByDesc('start_datetime')->first();
+        /** @var ContextPost $contextPost */
+        $contextPost = ContextPost::query()->first();
 
-        $contextService->processContext($contextEventFailed->id, ContextEvent::class);
+        $prompt = view('prompts.event_extraction', [
+            'date' => $contextPost->created_at,
+            'inputText' => $contextService->buildContext($contextPost),
+            'communityLocation' => "\nгород: {$contextPost->community->city}\nулица: {$contextPost->community->street}\nдом: {$contextPost->community->house}"
+        ])->render();
 
-        $events = $service->getEventsFeed(new Point(39.1967, 51.666), [181], ['per_page' => 20]);
-        dd($events);
+        dd($prompt);
 //        dd(collect($events->items()));
     }
 }

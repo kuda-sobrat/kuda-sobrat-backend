@@ -39,6 +39,7 @@ class ContextPostService implements ContextServiceInterface
         $contextPost->save();
 
         $prompt = view('prompts.event_extraction', [
+            'date' => $contextPost->created_at,
             'inputText' => $context,
             'communityLocation' => "\nгород: {$contextPost->community->city}\nулица: {$contextPost->community->street}\nдом: {$contextPost->community->house}"
         ])->render();

@@ -20,6 +20,7 @@ class DatabaseSeeder extends Seeder
             CommunitiesTableSeeder::class,
 //            InterestsTableSeeder::class,
             InterestsCsvSeeder::class,
+            AdditionCommunitiesTableSeeder::class,
         ];
 
         foreach ($seeders as $seeder) {
