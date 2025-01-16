@@ -83,4 +83,14 @@ class SocialMediaApiBaseService implements SocialMediaServiceInterface
     {
         throw new \Exception('Метод getCommunityInfo не определен.');
     }
+
+    public function generateEventLink(int|string $sourceId, int|string|null $communityId = null): string
+    {
+        return '';
+    }
+
+    public function generateCommunityLink(int|string $communityId): string
+    {
+        return '';
+    }
 }

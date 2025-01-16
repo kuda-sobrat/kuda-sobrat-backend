@@ -7,6 +7,8 @@ use App\Enums\ProcessStatusEnum;
 use App\Support\Point;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Collection;
 
@@ -28,6 +30,9 @@ use Illuminate\Support\Collection;
  * @property $event_group_id
  * @property Collection<Interest> $interests
  * @property Collection<ContextPost> $contextPosts
+ * @property Collection<Community> $communities
+ * @property Collection<EventSource> $eventSources
+ * @property EventGroup $eventGroup
  */
 class Event extends Model
 {
@@ -59,6 +64,8 @@ class Event extends Model
     protected $with = [
         'attachments',
         'eventGroup',
+        'communities',
+        'eventSources',
     ];
 
     protected $casts = [
@@ -100,5 +107,25 @@ class Event extends Model
     public function eventGroup()
     {
         return $this->belongsTo(EventGroup::class, 'event_group_id');
+    }
+
+    /**
+     * Связанные сообщества
+     *
+     * @return BelongsToMany
+     */
+    public function communities()
+    {
+        return $this->belongsToMany(Community::class);
+    }
+
+    /**
+     * Связанные источники
+     *
+     * @return HasMany
+     */
+    public function eventSources(): HasMany
+    {
+        return $this->hasMany(EventSource::class);
     }
 }
