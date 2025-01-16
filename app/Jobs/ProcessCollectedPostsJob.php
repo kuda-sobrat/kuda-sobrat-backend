@@ -44,7 +44,7 @@ class ProcessCollectedPostsJob implements ShouldQueue
         }
 
         foreach ($community->contextPosts as $contextPost) {
-            if ($contextPost->status === ProcessStatusEnum::Created) {
+            if ($contextPost->status === ProcessStatusEnum::Created || $contextPost->status === ProcessStatusEnum::Failed) {
                 // TODO: обработка ошибок
                 try {
                     ProcessContextJob::dispatch($contextPost->id, ContextPost::class);

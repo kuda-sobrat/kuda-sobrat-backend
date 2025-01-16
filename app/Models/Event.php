@@ -56,6 +56,11 @@ class Event extends Model
         'event_group_id',
     ];
 
+    protected $with = [
+        'attachments',
+        'eventGroup',
+    ];
+
     protected $casts = [
         'start_datetime' => 'datetime',
         'end_datetime' => 'datetime',
