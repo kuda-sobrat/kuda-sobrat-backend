@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Enums\EventTypeEnum;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 
@@ -19,8 +20,11 @@ use Illuminate\Database\Eloquent\Model;
  * @property $end_datetime
  * @property $location
  * @property $event_group_id
+ * @property double $cost
+ * @property EventTypeEnum $type
  * @property ContextPost $contextPost
  * @property EventGroup $eventGroup
+ * @property ContextResponse $contextResponse
  */
 class ContextEvent extends Model
 {
@@ -34,6 +38,8 @@ class ContextEvent extends Model
         'context_id',
         'status',
         'name',
+        'cost',
+        'type',
         'description',
         'start_datetime',
         'end_datetime',
@@ -44,6 +50,8 @@ class ContextEvent extends Model
     protected $casts = [
         'start_datetime' => 'datetime',
         'end_datetime' => 'datetime',
+        'cost' => 'decimal:2',
+        'type' => EventTypeEnum::class,
     ];
 
     /**
@@ -74,6 +82,16 @@ class ContextEvent extends Model
     public function contextResponses()
     {
         return $this->hasMany(ContextResponse::class, 'id', 'context_id');
+    }
+
+    /**
+     * Связь с context_responses
+     *
+     * @return \Illuminate\Database\Eloquent\Relations\HasOne
+     */
+    public function contextResponse()
+    {
+        return $this->hasOne(ContextResponse::class, 'id', 'context_id');
     }
 
     /**

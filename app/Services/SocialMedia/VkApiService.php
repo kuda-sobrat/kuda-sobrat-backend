@@ -271,4 +271,14 @@ class VkApiService extends SocialMediaApiBaseService
         }
         return $attachments;
     }
+
+    public function generateEventLink(int|string $sourceId, int|string|null $communityId = null): string
+    {
+        return "https://vk.com/wall-{$communityId}_{$sourceId}";
+    }
+
+    public function generateCommunityLink(int|string $communityId): string
+    {
+        return "https://vk.com/club{$communityId}";
+    }
 }

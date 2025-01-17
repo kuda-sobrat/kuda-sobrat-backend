@@ -37,4 +37,21 @@ interface SocialMediaServiceInterface
      * @return array Информация о сообществе.
      */
     public function getCommunityInfo(int|string $communityId): array;
+
+    /**
+     * Генерирует ссылку для события на основе источника.
+     *
+     * @param int|string $sourceId
+     * @param int|string|null $communityId
+     * @return string
+     */
+    public function generateEventLink(int|string $sourceId, int|string|null $communityId = null): string;
+
+    /**
+     * Генерирует ссылку на сообщество.
+     *
+     * @param int|string $communityId
+     * @return string
+     */
+    public function generateCommunityLink(int|string $communityId): string;
 }

@@ -10,6 +10,7 @@ use App\Models\ContextPost;
 use App\Models\Event;
 use App\Models\EventAttachment;
 use App\Models\EventGroup;
+use App\Models\EventSource;
 use App\Services\FormatterService;
 use App\Services\Geocoder\GeocodingService;
 use App\Support\Point;
@@ -108,6 +109,8 @@ class ContextEventService implements ContextServiceInterface
                 return;
             }
 
+            $response = $contextEvent->contextResponse->jsonResponse;
+
             // Создаем новый Event
             $event = new Event([
                 'name' => $contextEvent->name,
@@ -117,12 +120,21 @@ class ContextEventService implements ContextServiceInterface
                 'location' => $location,
                 'location_name' => $contextEvent->location,
                 'unique_hash' => $uniqueHash ?? null,
-                'community_id' => $contextEvent->community_id,
                 'event_group_id' => $contextEvent->event_group_id,
+                'cost' => $contextEvent->cost,
+                'type' => $contextEvent->type,
                 // Дополнительные поля
             ]);
 
             $event->save();
+            $event->communities()->syncWithoutDetaching($contextEvent->community_id);
+
+            // Связывание с источником
+            EventSource::query()->updateOrCreate([
+                'event_id' => $event->id,
+                'social_link_id' => $contextEvent->contextPost->social_link_id,
+                'source_id' => $contextEvent->contextPost->source_id,
+            ]);
 
             // Обновляем статус ContextEvent
             $contextEvent->status = ProcessStatusEnum::Completed->value;

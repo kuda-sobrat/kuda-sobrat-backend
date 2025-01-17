@@ -3,14 +3,18 @@
 namespace App\Console\Commands;
 
 use App\Enums\ProcessStatusEnum;
+use App\Models\Community;
 use App\Models\ContextEvent;
 use App\Models\ContextPost;
+use App\Models\Event;
+use App\Models\EventSource;
 use App\Models\Interest;
 use App\Services\Context\ContextService;
 use App\Services\Events\EventService;
 use App\Services\InterestService;
 use App\Support\Point;
 use Illuminate\Console\Command;
+use Illuminate\Support\Collection;
 
 class Test extends Command
 {
@@ -31,21 +35,9 @@ class Test extends Command
     /**
      * Execute the console command.
      */
-    public function handle(
-        EventService $service,
-        ContextService $contextService,
-    )
+    public function handle()
     {
-        /** @var ContextPost $contextPost */
-        $contextPost = ContextPost::query()->first();
 
-        $prompt = view('prompts.event_extraction', [
-            'date' => $contextPost->created_at,
-            'inputText' => $contextService->buildContext($contextPost),
-            'communityLocation' => "\nгород: {$contextPost->community->city}\nулица: {$contextPost->community->street}\nдом: {$contextPost->community->house}"
-        ])->render();
-
-        dd($prompt);
-//        dd(collect($events->items()));
+//        dd($events[0]->toArray());
     }
 }

@@ -51,6 +51,7 @@ class VerifyCommunityJob implements ShouldQueue
                     new VerifyCommunityPostsJob($community->id)
                 ])->dispatch($community->id);
             } else {
+                CommunityLocationDetectionJob::dispatch($community->id);
                 VerifyCommunityPostsJob::dispatch($community->id);
             }
         } catch (\Exception $e) {

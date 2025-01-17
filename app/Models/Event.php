@@ -3,10 +3,13 @@
 namespace App\Models;
 
 use App\Casts\PointCast;
+use App\Enums\EventTypeEnum;
 use App\Enums\ProcessStatusEnum;
 use App\Support\Point;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Support\Collection;
 
@@ -26,8 +29,13 @@ use Illuminate\Support\Collection;
  * @property $created_at
  * @property $updated_at
  * @property $event_group_id
+ * @property double $cost
+ * @property EventTypeEnum $type
  * @property Collection<Interest> $interests
  * @property Collection<ContextPost> $contextPosts
+ * @property Collection<Community> $communities
+ * @property Collection<EventSource> $eventSources
+ * @property EventGroup $eventGroup
  */
 class Event extends Model
 {
@@ -49,11 +57,20 @@ class Event extends Model
         'attendees',
         'shares',
         'views',
+        'cost',
+        'type',
         'is_archived',
         'archived_at',
         'marked_for_deletion_at',
         'deleted_at',
         'event_group_id',
+    ];
+
+    protected $with = [
+        'attachments',
+        'eventGroup',
+        'communities',
+        'eventSources',
     ];
 
     protected $casts = [
@@ -64,6 +81,8 @@ class Event extends Model
         'marked_for_deletion_at' => 'datetime',
         'deleted_at' => 'datetime',
         'location' => PointCast::class,
+        'cost' => 'decimal:2',
+        'type' => EventTypeEnum::class,
     ];
 
     public function contextPosts()
@@ -95,5 +114,25 @@ class Event extends Model
     public function eventGroup()
     {
         return $this->belongsTo(EventGroup::class, 'event_group_id');
+    }
+
+    /**
+     * Связанные сообщества
+     *
+     * @return BelongsToMany
+     */
+    public function communities()
+    {
+        return $this->belongsToMany(Community::class);
+    }
+
+    /**
+     * Связанные источники
+     *
+     * @return HasMany
+     */
+    public function eventSources(): HasMany
+    {
+        return $this->hasMany(EventSource::class);
     }
 }

@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Enums\ProcessStatusEnum;
+use App\Services\SocialMedia\SocialMediaApiFactory;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Collection;
@@ -23,6 +24,7 @@ use Illuminate\Support\Collection;
  * @property Collection<CommunitySocialLink> $socialLinks Ссылки на соц. сети
  * @property Collection<ContextPost> $contextPosts Посты
  * @property Collection<Interest> $interests Интересы сообщества
+ * @property Collection<Event> $events Мероприятия связанные с сообществом
  */
 class Community extends Model
 {
@@ -79,5 +81,13 @@ class Community extends Model
     public function contextPosts()
     {
         return $this->hasManyThrough(ContextPost::class, CommunitySocialLink::class, 'community_id', 'social_link_id', 'id', 'id');
+    }
+
+    /**
+     * @return \Illuminate\Database\Eloquent\Relations\BelongsToMany
+     */
+    public function events()
+    {
+        return $this->belongsToMany(Event::class);
     }
 }
