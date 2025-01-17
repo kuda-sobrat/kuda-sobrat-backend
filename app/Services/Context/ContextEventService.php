@@ -109,6 +109,8 @@ class ContextEventService implements ContextServiceInterface
                 return;
             }
 
+            $response = $contextEvent->contextResponse->jsonResponse;
+
             // Создаем новый Event
             $event = new Event([
                 'name' => $contextEvent->name,
@@ -119,6 +121,8 @@ class ContextEventService implements ContextServiceInterface
                 'location_name' => $contextEvent->location,
                 'unique_hash' => $uniqueHash ?? null,
                 'event_group_id' => $contextEvent->event_group_id,
+                'cost' => $contextEvent->cost,
+                'type' => $contextEvent->type,
                 // Дополнительные поля
             ]);
 

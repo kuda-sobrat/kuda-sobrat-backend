@@ -3,9 +3,7 @@
 namespace App\Console\Commands;
 
 use App\Enums\ProcessStatusEnum;
-use App\Jobs\ProcessContextJob;
 use App\Models\ContextEvent;
-use App\Models\ContextResponse;
 use App\Services\Context\ContextEventService;
 use Illuminate\Console\Command;
 

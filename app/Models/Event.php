@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Casts\PointCast;
+use App\Enums\EventTypeEnum;
 use App\Enums\ProcessStatusEnum;
 use App\Support\Point;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -28,6 +29,8 @@ use Illuminate\Support\Collection;
  * @property $created_at
  * @property $updated_at
  * @property $event_group_id
+ * @property double $cost
+ * @property EventTypeEnum $type
  * @property Collection<Interest> $interests
  * @property Collection<ContextPost> $contextPosts
  * @property Collection<Community> $communities
@@ -54,6 +57,8 @@ class Event extends Model
         'attendees',
         'shares',
         'views',
+        'cost',
+        'type',
         'is_archived',
         'archived_at',
         'marked_for_deletion_at',
@@ -76,6 +81,8 @@ class Event extends Model
         'marked_for_deletion_at' => 'datetime',
         'deleted_at' => 'datetime',
         'location' => PointCast::class,
+        'cost' => 'decimal:2',
+        'type' => EventTypeEnum::class,
     ];
 
     public function contextPosts()

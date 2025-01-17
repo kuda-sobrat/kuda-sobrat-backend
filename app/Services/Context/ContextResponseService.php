@@ -3,6 +3,7 @@
 namespace App\Services\Context;
 
 use App\Contracts\Interfaces\ContextServiceInterface;
+use App\Enums\EventTypeEnum;
 use App\Enums\ProcessStatusEnum;
 use App\Jobs\ProcessContextJob;
 use App\Models\ContextEvent;
@@ -77,6 +78,8 @@ class ContextResponseService implements ContextServiceInterface
                     'start_datetime' => !empty($eventData->start_datetime) ? new \DateTime($eventData->start_datetime) : null,
                     'end_datetime' => !empty($eventData->end_datetime) ? new \DateTime($eventData->end_datetime) : null,
                     'location' => $eventData->location,
+                    'cost' => $eventData->price,
+                    'type' => !empty($eventData->type) ? EventTypeEnum::from($eventData->type) : null,
                 ]);
 
                 if (empty($eventGroup)) {

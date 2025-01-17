@@ -51,6 +51,7 @@ class EventController extends Controller
     public function show(Event $event): Response
     {
         $event->load('communities.socialLinks');
+        $event->load('eventGroup.events');
         return $this->response->item($event, BaseTransformer::class);
     }
 

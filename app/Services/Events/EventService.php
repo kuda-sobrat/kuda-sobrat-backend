@@ -429,7 +429,9 @@ class EventService
 
         // Применяем фильтр по времени (актуальности)
         if ($isActual) {
-            $eventsQuery->where('start_datetime', '>', Carbon::now());
+            $eventsQuery
+                ->where('start_datetime', '>=', Carbon::now())
+                ->orWhere('end_datetime', '>=', Carbon::now());
         }
 
         // Применяем дополнительные фильтры
